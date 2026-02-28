@@ -1,16 +1,19 @@
 ---
 title: "ADHD Adults Diagnosis"
-format: html
+format: 
+  html:
+    embed-resources: true
 editor: visual
 ---
 
-## ADHD Adults Diagnosis
+## *ADHD Adults Diagnosis*
 
 ```{r}
 
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
+library(metafor)
 library(stringr)
 library(tidyr)
 library(writexl)
@@ -19,6 +22,8 @@ data_location <- "https://raw.githubusercontent.com/jeremymiles/adhd_git/refs/he
 
 d <- read.csv(data_location)
 
+d <- d %>%
+  dplyr::rename(true_negative_self_report = true_negative_self.report)
 
 capitalize_first <- function(s) {
   if (is.na(s) || s == "") { #Handle NAs and empty strings
@@ -30,7 +35,7 @@ capitalize_first <- function(s) {
 }
 ```
 
-You can add options to executable code like this
+*You can add options to executable code like this*
 
 ```{r}
 #|fig-height: 12
@@ -222,7 +227,7 @@ for (name_1 in d_ss_long$name) {
 
 ```
 
-Self report only
+*Self report only*
 
 ```{r}
 
@@ -524,10 +529,11 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
 
 ```
 
-# Function to get Accuracy
+# *Function to get Accuracy*
 
 ```{r}
 library(dplyr)
+library(kableExtra)
 
 # Function to read CSV and select specific columns
 read_adhd_data <- function(file_path) {
@@ -577,13 +583,13 @@ calculate_adhd_stats <- function(data) {
 accuracy <- calculate_adhd_stats(accuracy)
 head(accuracy)
 #install.packages("kableExtra")
-library(kableExtra)
+
 
 accuracy <- accuracy %>%
   select(-Sensitivity, -Specificity)
 
 # Create and save in one pipe chain
-output_file <- "C:/Users/SusanneH/OneDrive - University of Southern California/Susanne/USC/ADHD adults/Analysis/accuracy.html"
+output_file <- "accuracy.html"
 
 
 # Create and save
@@ -593,7 +599,7 @@ kableExtra::kbl(accuracy) %>%
 
 ```
 
-## Program Summary of Findings Table
+## *Program Summary of Findings Table*
 
 ```{r prog_summary}
 # Test: combination
@@ -714,6 +720,108 @@ all_kqs <-
 
 res <- lapply(all_kqs, CreateProgSummary)
 
-writexl::write_xlsx(dplyr::bind_rows(res), "../analysis/adhd_adults_diagnosis_SoF.xlsx")
+writexl::write_xlsx(dplyr::bind_rows(res), "adhd_adults_diagnosis_SoF.xlsx")
 
 ```
+
+## *Sensitivity and Specificity Meta-Analysis*
+
+```{r}
+# Calculate Logit Sensitivity
+dat_sens <- 
+  metafor::escalc(
+    measure="PLO", 
+    xi=true_positive_self_report, 
+    ni=(true_positive_self_report + false_negative_self_report), data=d, add=0.5)
+dat_sens$outcome <- "sens"
+
+# Calculate Logit Specificity
+dat_spec <- 
+  metafor::escalc(
+    measure="PLO", 
+    xi=true_negative_self_report, 
+    ni=(true_negative_self_report + false_positive_self_report), 
+    data=d, add=0.5)
+dat_spec$outcome <- "spec"
+
+# Combine into long format
+dat_long <- rbind(dat_sens, dat_spec)
+dat_long <- dat_long[order(dat_long$ID), ] # Group by study
+
+
+res <- metafor::rma.mv(
+  yi, vi, 
+  mods = ~ outcome - 1,         # Separate means for sens and spec
+  random = ~ outcome | ID,   # Random effects for outcomes within studies
+  struct = "UN",                # Unstructured covariance (estimates correlation)
+  data = dat_long)
+
+summary(res)
+
+
+preds <- predict(res, newmods = diag(2), transf = transf.ilogit, digits = 3) %>%
+  as.data.frame()
+rownames(preds) <- c("Sensitivity", "Specificity")
+print(preds)
+
+
+dat_sub <- subset(dat_long, outcome == "sens") 
+dat_sub <- dat_sub %>% dplyr::filter(!is.na(vi))
+k <- nrow(dat_sub) # Automatically count the studies
+
+# 2. Create the forest plot with dynamic scaling
+metafor::forest(dat_sub$yi, 
+                vi = dat_sub$vi, 
+                slab = dat_sub$ID,
+                transf = transf.ilogit, 
+                # ylim: bottom is -2 for the diamond, top is k+3 for headers
+                ylim = c(-2, k + 3), 
+                rows = 1:k,
+                header = "Study",
+                main = "Sensitivity")
+
+addpoly(res$beta[1], 
+        sei = res$se[1], 
+        row = -1, 
+        transf = transf.ilogit, 
+        mlab = "Pooled Sensitivity",
+        col = "red")
+
+
+
+dat_sub <- subset(dat_long, outcome == "spec") 
+dat_sub <- dat_sub %>% dplyr::filter(!is.na(vi))
+k <- nrow(dat_sub) # Automatically count the studies
+
+# 2. Create the forest plot with dynamic scaling
+metafor::forest(dat_sub$yi, 
+                vi = dat_sub$vi, 
+                slab = dat_sub$ID,
+                transf = transf.ilogit, 
+                # ylim: bottom is -2 for the diamond, top is k+3 for headers
+                ylim = c(-2, k + 3), 
+                rows = 1:k,
+                header = "Study",
+                main = "Specificity")
+
+addpoly(res$beta[2], 
+        sei = res$se[2], 
+        row = -1, 
+        transf = transf.ilogit, 
+        mlab = "Pooled Specificity",
+        col = "red")
+```
+
+*I need a meta-analysis of the diagnostic accuracy of the index tests included in the study. Most important are the self report questionnaires.*
+
+*size*
+
+*n_ADHD*
+
+*true_positive_self_report*
+
+*false_positive_self_report*
+
+*false_negative_self_report*
+
+*true_negative_self-report*
