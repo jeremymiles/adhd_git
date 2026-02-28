@@ -727,13 +727,24 @@ writexl::write_xlsx(dplyr::bind_rows(res), "adhd_adults_diagnosis_SoF.xlsx")
 ## *Sensitivity and Specificity Meta-Analysis*
 
 ```{r}
+
+
+
+# Assuming your data frame is called 'dat'
+d$study <- gsub("\\{.*\\}", "", d$ID)
+
+# If you want to clean up any trailing spaces left behind:
+d$study <- trimws(d$study)
+
 # Calculate Logit Sensitivity
 dat_sens <- 
   metafor::escalc(
     measure="PLO", 
     xi=true_positive_self_report, 
     ni=(true_positive_self_report + false_negative_self_report), data=d, add=0.5)
-dat_sens$outcome <- "sens"
+dat_sens$outcome <- "sens" 
+dat_sens <- dat_sens %>% dplyr::arrange(desc(study))
+
 
 # Calculate Logit Specificity
 dat_spec <- 
@@ -743,21 +754,21 @@ dat_spec <-
     ni=(true_negative_self_report + false_positive_self_report), 
     data=d, add=0.5)
 dat_spec$outcome <- "spec"
+dat_spec <- dat_spec %>% dplyr::arrange(desc(study))
 
 # Combine into long format
 dat_long <- rbind(dat_sens, dat_spec)
-dat_long <- dat_long[order(dat_long$ID), ] # Group by study
+dat_long <- dat_long[order(dat_long$study), ] # Group by study
 
 
 res <- metafor::rma.mv(
   yi, vi, 
   mods = ~ outcome - 1,         # Separate means for sens and spec
-  random = ~ outcome | ID,   # Random effects for outcomes within studies
+  random = ~ outcome | study,   # Random effects for outcomes within studies
   struct = "UN",                # Unstructured covariance (estimates correlation)
   data = dat_long)
 
 summary(res)
-
 
 preds <- predict(res, newmods = diag(2), transf = transf.ilogit, digits = 3) %>%
   as.data.frame()
@@ -765,14 +776,14 @@ rownames(preds) <- c("Sensitivity", "Specificity")
 print(preds)
 
 
-dat_sub <- subset(dat_long, outcome == "sens") 
-dat_sub <- dat_sub %>% dplyr::filter(!is.na(vi))
-k <- nrow(dat_sub) # Automatically count the studies
+dat_sens <- subset(dat_long, outcome == "sens") 
+
+k <- length(dat_sens$yi) # Automatically count the studies
 
 # 2. Create the forest plot with dynamic scaling
-metafor::forest(dat_sub$yi, 
-                vi = dat_sub$vi, 
-                slab = dat_sub$ID,
+metafor::forest(dat_sens$yi, 
+                vi = dat_sens$vi, 
+                slab = dat_sens$study,
                 transf = transf.ilogit, 
                 # ylim: bottom is -2 for the diamond, top is k+3 for headers
                 ylim = c(-2, k + 3), 
@@ -789,14 +800,14 @@ addpoly(res$beta[1],
 
 
 
-dat_sub <- subset(dat_long, outcome == "spec") 
-dat_sub <- dat_sub %>% dplyr::filter(!is.na(vi))
-k <- nrow(dat_sub) # Automatically count the studies
+dat_spec <- subset(dat_long, outcome == "spec") 
+
+k <- length(dat_spec$vi) # Automatically count the studies
 
 # 2. Create the forest plot with dynamic scaling
-metafor::forest(dat_sub$yi, 
-                vi = dat_sub$vi, 
-                slab = dat_sub$ID,
+metafor::forest(dat_spec$yi, 
+                vi = dat_spec$vi, 
+                slab = dat_spec$study,
                 transf = transf.ilogit, 
                 # ylim: bottom is -2 for the diamond, top is k+3 for headers
                 ylim = c(-2, k + 3), 
@@ -810,18 +821,78 @@ addpoly(res$beta[2],
         transf = transf.ilogit, 
         mlab = "Pooled Specificity",
         col = "red")
+
 ```
 
-*I need a meta-analysis of the diagnostic accuracy of the index tests included in the study. Most important are the self report questionnaires.*
+```{r}
 
-*size*
+all_studies <- dat_long %>%
+  group_by(study) %>%
+  # Keep studies where at least one row (sens or spec) is not NA
+  filter(any(!is.na(yi))) %>%
+  ungroup() %>%
+  # Get the unique names and sort them alphabetically
+  distinct(study) %>%
+  arrange(desc(study)) %>%
+  # Assign the fixed row numbers for the plots
+  mutate(row_num = row_number())
 
-*n_ADHD*
+# 2. Check the count (should be ~40 based on your current project)
+k_total <- nrow(all_studies)
+print(paste("Total studies in forest plot:", k_total))
 
-*true_positive_self_report*
+# 1. Prepare data with dummy values and a color vector
+dat_sens_plot <- all_studies %>% 
+  left_join(filter(dat_long, outcome == "sens"), by = "study") %>%
+  mutate(
+    is_missing = is.na(yi),
+    yi_plot = ifelse(is_missing, 0.5, yi),  # Provide a dummy value
+    vi_plot = ifelse(is_missing, 0.001, vi), # Provide a tiny dummy variance
+    # Create a color vector: "black" for real data, "white" for missing
+    pt_col = ifelse(is_missing, "white", "black")
+  )
 
-*false_positive_self_report*
+dat_spec_plot <- all_studies %>% 
+  left_join(filter(dat_long, outcome == "spec"), by = "study") %>%
+  mutate(
+    is_missing = is.na(yi),
+    yi_plot = ifelse(is_missing, 0.5, yi),
+    vi_plot = ifelse(is_missing, 0.001, vi),
+    pt_col = ifelse(is_missing, "white", "black")
+  )
 
-*false_negative_self_report*
+# 2. Side-by-Side Plot
+par(mfrow=c(1,2), mar=c(5,4,3,2))
 
-*true_negative_self-report*
+# --- SENSITIVITY ---
+metafor::forest(dat_sens_plot$yi_plot, 
+                vi = dat_sens_plot$vi_plot, 
+                slab = all_studies$study,
+                transf = transf.ilogit, 
+                ylim = c(-2, k_total + 3), 
+                rows = all_studies$row_num,
+                # Color tricking: make points and bars white for missing data
+                col = dat_sens_plot$pt_col,
+                border = dat_sens_plot$pt_col,
+                # Force the text in the right margin to be white for missing data
+                colout = dat_sens_plot$pt_col, 
+                header = "Study", main = "Sensitivity", cex = 0.6)
+
+addpoly(res$beta[1], sei = res$se[1], row = -1, 
+        transf = transf.ilogit, mlab = "Pooled Sensitivity", col = "red", cex = 0.6)
+
+# --- SPECIFICITY ---
+metafor::forest(dat_spec_plot$yi_plot, 
+                vi = dat_spec_plot$vi_plot, 
+                slab = all_studies$study,
+                transf = transf.ilogit, 
+                ylim = c(-2, k_total + 3), 
+                rows = all_studies$row_num,
+                col = dat_spec_plot$pt_col,
+                border = dat_spec_plot$pt_col,
+                colout = dat_spec_plot$pt_col,
+                header = "Study", main = "Specificity", cex = 0.6)
+
+addpoly(res$beta[2], sei = res$se[2], row = -1, 
+        transf = transf.ilogit, mlab = "Pooled Specificity", col = "red", cex = 0.6)
+```
