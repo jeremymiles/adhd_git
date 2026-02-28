@@ -1,0 +1,719 @@
+---
+title: "ADHD Adults Diagnosis"
+format: html
+editor: visual
+---
+
+## ADHD Adults Diagnosis
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(stringr)
+library(tidyr)
+library(writexl)
+
+data_location <- "https://raw.githubusercontent.com/jeremymiles/adhd_git/refs/heads/main/data/diagnosis_data.csv"
+
+d <- read.csv(data_location)
+
+
+capitalize_first <- function(s) {
+  if (is.na(s) || s == "") { #Handle NAs and empty strings
+    return(s)
+  }
+  first_letter <- str_sub(s, 1, 1)
+  rest_of_string <- str_sub(s, 2)
+  return(str_c(str_to_upper(first_letter), rest_of_string))
+}
+```
+
+You can add options to executable code like this
+
+```{r}
+#|fig-height: 12
+d_ss <- d %>% 
+  dplyr::select(
+    ID, size, starts_with("sensitivity"), starts_with("specificity"),
+    test_description_self
+  ) %>%
+  dplyr::select(
+    ID, size,
+    ends_with(
+      c("self_report", "neuropsycho_tests", "clinician_interview",
+        "combination", "clinician_tool", "clinician_rating", 
+        "peer_rating", "neuroimaging", "neuroimaging", 
+        "observational", "biomarker", "EEG")
+    )
+  ) %>%
+  dplyr::select(
+    !starts_with(c(
+      "sensitivity_CI", "specificity_CI", 
+      "sensitivity_other", "specificity_other"))
+  )
+
+d_test_description_self <- d %>%
+  dplyr::select(
+    ID, test_description_self
+  ) %>% 
+  dplyr::distinct()
+
+d_sens <- d_ss %>%
+  dplyr::select(ID, starts_with("sens")
+  )
+
+d_spec <- d_ss %>%
+  dplyr::select(ID, starts_with("spec")
+  )
+
+d_sens_long <- d_sens %>%
+  tidyr::pivot_longer(
+    cols = -ID
+  ) %>%
+  dplyr::rename(sensitivity = value)%>%
+  dplyr::mutate(name = stringr::str_remove(name, "sensitivity_"))
+  
+
+
+d_spec_long <- d_spec %>%
+  tidyr::pivot_longer(
+    cols = -ID
+  ) %>%
+  dplyr::rename(specificity = value) %>%
+  dplyr::mutate(name = stringr::str_remove(name, "specificity_"))
+
+
+d_ss_long <- dplyr::full_join(
+  d_sens_long, d_spec_long
+) %>% 
+  dplyr::filter(
+    !is.na(sensitivity) & !is.na(specificity)
+  ) %>% 
+  dplyr::mutate(
+    name = sapply(name, capitalize_first)
+  ) %>%
+  dplyr::mutate(
+    name = stringr::str_replace_all(name, "_", " "),
+    name = ifelse(
+      name == "Neuropsycho tests", "Neuropsychological Test", name
+      ),
+    name = ifelse(
+      name == "Self report", "Self-Report Questionnaire", name
+      ),
+    name = ifelse(
+      name == "Peer rating", "Peer-Rating", name
+      ),
+    name = ifelse(
+      name == "Clinician interview", "Clinician Tool", name
+      ),
+    
+)
+
+# mark neurotypicals
+d_neurotypical <- d %>% dplyr::select(ID, Neurotypical, size) %>% 
+  dplyr::mutate(
+    Neurotypical = Neurotypical == "Neurotypical"
+  )
+
+d_neurotypical_Only <- d %>% 
+  dplyr::mutate(
+    Neurotypical_Only = Neurotypical == "Neurotypical" &
+        Clinical != "Clinical" &
+        Autism != "Autism" &
+        Antisocial != "Antisocial" &
+        Depression != "Depression" &
+        Feigning != "Feigning"
+  ) %>% dplyr::select(ID, Neurotypical_Only, size)
+
+
+# count the number of different types of study
+d_name_count <- data.frame(dplyr::bind_rows(
+  c(name = "Combination", count = sum(d$Combination == "Combination")),
+  c(name = "Biomarker", count = sum(d$Biomarker == "Biomarker")),
+  c(name = "Clinician Tool", count = sum(d$Clinician.interview == "Clinician interview")),
+  c(name = "EEG", count = sum(d$EEG == "EEG")),
+  c(name = "Neuroimaging", count = sum(d$Neuroimaging == "Neuroimaging")),
+  c(name = "Neuropsychological Test",   count = sum(d$Neuropsychological == "Neuropsychological")),
+  c(name = "Peer-Rating",   count = sum(d$Peer.report == "Peer report")),
+  c(name = "Self-Report Questionnaire",   count = sum(d$Self.report == "Self report"))
+))
+
+# merge with long data
+d_ss_long <- d_ss_long %>%
+  dplyr::full_join(
+    d_neurotypical
+  ) %>% 
+  dplyr::full_join(
+    d_neurotypical_Only
+  ) %>% 
+    dplyr::filter(!is.na(name))
+
+ggplot2::ggplot(
+  d_ss_long, 
+  aes(
+    x = sensitivity, 
+    y = specificity)) +
+  geom_point() +
+  xlab("Sensitivity (%)") + 
+  ylab("Specificity (%)")
+
+
+d_ss_long <- d_ss_long %>%
+  dplyr::full_join(d_name_count, by = "name") %>%
+  dplyr::mutate(
+    name_with_count = paste0(name, " (n = ", count, " studies)")
+  )
+
+ggplot2::ggplot(
+  d_ss_long, 
+  aes(
+    x = sensitivity, 
+    y = specificity,
+    colour = name, shape = Neurotypical)) +
+  geom_point(size = 2.5) +
+  xlab("Sensitivity (%)") + 
+  ylab("Specificity (%)") +
+  facet_wrap(~ name_with_count) +
+  guides(colour = "none") +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+
+#Figure 8
+ggplot2::ggplot(
+  d_ss_long, 
+  aes(
+    x = sensitivity, 
+    y = specificity,
+    colour = name, shape = Neurotypical_Only)) +
+  geom_point(size = 2.5) +
+  xlab("Sensitivity") + 
+  ylab("Specificity") +
+  facet_wrap(~ name, nrow = 2) +
+  guides(colour = "none") +
+  labs(
+    shape = "Neurotypical only"
+  )
+
+# separate charts
+for (name_1 in d_ss_long$name) {
+  plot <- ggplot2::ggplot(
+    d_ss_long %>% dplyr::filter(name_1 == name), 
+    aes(
+      x = sensitivity, 
+      y = specificity,
+      shape = Neurotypical_Only)) +
+    geom_point(size = 2.5) +
+    xlab("Sensitivity") + 
+    ylab("Specificity") +
+    guides(colour = "none") +
+    labs(
+      shape = "Neurotypical only"
+    ) +
+    ggtitle(name_1)
+  print(plot)
+}
+
+
+# Figure 8 separate charts
+
+```
+
+Self report only
+
+```{r}
+
+# this is figure 5
+cat("self report<p>")
+# 1. Prepare your data first
+plot_data <- d_ss_long %>%
+  dplyr::filter(
+    name == "Self-Report"
+  ) %>%
+  dplyr::inner_join(
+    d_test_description_self
+  ) %>%
+  dplyr::mutate(
+    test_description = word(test_description_self, 1),
+    size = size)
+
+
+
+# Set colors for some
+plot_data <- plot_data %>%
+  dplyr::mutate(
+    `Frequent Tools` = "Other",
+    `Frequent Tools` = ifelse(substr(test_description, 1, 5) == "CAARS", "CAARS", `Frequent Tools`),
+    `Frequent Tools` = ifelse(substr(test_description, 1, 5) == "BAARS", "BAARS", `Frequent Tools`),
+    `Frequent Tools` = ifelse(substr(test_description, 1, 4) == "ASRS", "ASRS", `Frequent Tools`),
+    `Frequent Tools` = ifelse(substr(test_description, 1, 4) == "WURS", "WURS", `Frequent Tools`)
+  )
+
+plot_data %>%
+  dplyr::group_by(test_description, `Frequent Tools`) %>%
+  dplyr::summarise(n = dplyr::n()) %>%
+  dplyr::arrange(desc(n)) %>%
+  knitr::kable()
+
+# 2. Inspect your data (optional, but highly recommended for debugging)
+# print(str(plot_data))
+# print(summary(plot_data$size))
+# print(sum(is.na(plot_data$size)))
+# print(range(plot_data$size, na.rm = TRUE))
+
+# 1. Define your colors in a named vector
+# You must assign a color to every category, or the others will disappear/turn grey.
+my_colors <- c(
+  "ASRS"  = "red",    # Replace with your preferred color
+  "CAARS" = "blue",   # Replace with your preferred color
+  "BAARS" = "darkgreen",  # Replace with your preferred color
+  "WURS" = "brown4",  # Replace with your preferred color
+  "Other" = "black"   # The specific requirement
+)
+
+# 2. Plot
+ggplot2::ggplot(
+  data = plot_data, 
+  aes(
+    x = sensitivity,
+    y = specificity,
+    shape = Neurotypical_Only,
+    size = size,
+    color = `Frequent Tools`
+  )
+) +
+  geom_point() +
+  # 3. Add the manual scale
+  scale_color_manual(values = my_colors) +
+  xlab("Sensitivity (%)") +
+  ylab("Specificity (%)") +
+  ggrepel::geom_text_repel(
+    aes(label = test_description), max.overlaps = 10, size = 3) +
+  labs(
+    shape = "Neurotypical only"
+  ) +
+  scale_size_continuous(
+    name = "Size", # This sets the legend title
+    breaks = c(50, 500, 1000), # Original untransformed values for legend
+    labels = c("50", "500", "1000"), # Corresponding labels
+    guide = "legend", # Explicitly request a legend
+    # Set limits based on the *transformed* size values from your plot_data
+    # This is crucial for the scale to match your actual plotted points
+  ) +  theme(legend.position = "right")
+
+
+d_test_description_np <- d %>%
+  dplyr::select(
+    ID, test_description_neuropsycho_tests, size
+  ) %>% 
+  dplyr::distinct() %>% 
+  dplyr::mutate(
+      test_description = word(test_description_neuropsycho_tests, 1)
+  ) 
+
+d_test_description_np %>%
+  dplyr::group_by(test_description) %>%
+  dplyr::summarise(n = dplyr::n()) %>%
+  dplyr::arrange(desc(n)) %>%
+  knitr::kable()
+
+rm(plot_data)
+
+# This is figure 6
+cat("Neuropsychological \n Tests<p>")
+plot_data <- d_ss_long %>%
+  dplyr::filter(
+    name == "Neuropsychological \n Tests"
+  ) %>%dplyr::inner_join(
+    d_test_description_np
+  ) %>%
+  dplyr::mutate(test_description = word(test_description_neuropsycho_tests, 1)) 
+
+
+# Set colors for some
+plot_data <- plot_data %>%
+  dplyr::mutate(
+    `Frequent Tools` = "Other",
+    `Frequent Tools` = 
+      ifelse(substr(test_description, 1, 3) == "AQT", "AQT", `Frequent Tools`),
+    `Frequent Tools` = 
+      ifelse(substr(test_description, 1, 5) == "C-CPT", "C-CPT", `Frequent Tools`),
+    `Frequent Tools` = 
+      ifelse(substr(test_description, 1, 4) == "MOXO", "MOXO", `Frequent Tools`),
+    `Frequent Tools` = 
+      ifelse(substr(test_description, 1, 6) == "QbTest", "QbTest", `Frequent Tools`
+             ),
+    `Frequent Tools` = 
+      ifelse(substr(test_description, 1, 5) == "Go-No", "Go-NoGo", `Frequent Tools`)
+  )
+  
+  my_colors <- c(
+  "AQT"  = "red",    # Replace with your preferred color
+  "C-CPT" = "blue",   # Replace with your preferred color
+  "MOXO" = "darkgreen",  # Replace with your preferred color
+  "QbTest" = "chocolate4",
+  "Go-NoGo" = "yellow",
+  "Other" = "black"   # The specific requirement
+)
+  
+  plot_data %>% ggplot2::ggplot(
+    aes(
+      x = sensitivity, 
+      y = specificity,
+      shape = Neurotypical_Only, size = size,
+    color = `Frequent Tools`)
+    ) +
+  geom_point() +
+  scale_color_manual(values = my_colors) +
+  xlab("Sensitivity (%)") + 
+  ylab("Specificity (%)") +
+  geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
+    labs(
+    shape = "Neurotypical only"
+  ) +  theme(legend.position = "right")
+
+
+```
+
+```{r auc}
+
+AUC_vars <- 
+  d %>% dplyr::select(
+    starts_with("AUC") 
+  ) %>%
+  dplyr::select(-starts_with("AUC_CI")) %>%
+  names()
+AUC_vars
+
+d <- d %>%
+  dplyr::mutate(
+    group = dplyr::case_when(
+      Neurotypical == "Neurotypical" &
+        Clinical != "Clinical" &
+        Autism != "Autism" &
+        Antisocial != "Antisocial" &
+        Depression != "Depression" &
+        Feigning != "Feigning" ~ "Neurotypical",
+      (Clinical == "Clinical" |
+         Autism == "Autism" |
+         Antisocial == "Antisocial" |
+         Depression == "Depression") &
+        Neurotypical != "Neurotypical" &
+        Feigning != "Feigning" ~ "Clinical",
+      Neurotypical == "Neurotypical" & (
+        Clinical == "Clinical" |
+          Autism == "Autism" |
+          Antisocial == "Antisocial" |
+          Depression == "Depression" |
+          Feigning == "Feigning" # Include Feigning here if needed for "Both"
+      ) ~ "Both (or more)",
+      TRUE ~ NA_character_
+    )
+  ) 
+
+
+
+d_long_accuracy <- d %>%
+  dplyr::select(
+    accuracy_biomarker,
+    accuracy_combination,
+    accuracy_EEG,
+    accuracy_neuroimaging,
+    accuracy_neuropsycho_tests,
+    accuracy_observational,
+    accuracy_peer_rating,
+    accuracy_self_report,
+    group
+  ) %>% 
+  dplyr::filter(!is.na(group)) %>%
+  pivot_longer(
+    cols = starts_with("accuracy_"),
+    names_to = "accuracy_type",
+    values_to = "accuracy_value",
+    names_prefix = "accuracy_"
+  )%>% 
+  dplyr::mutate(measure = "accuracy") %>%
+  dplyr::rename_with(~ gsub("accuracy_", "", .x), starts_with("accuracy"))
+
+
+
+
+d_long_AUC <- d %>%
+  dplyr::select(
+    starts_with("AUC"),
+    group
+  ) %>% 
+  dplyr::mutate(
+    AUC_neuropsycho_tests = as.numeric(AUC_neuropsycho_tests)
+  ) %>% 
+  dplyr::select(-starts_with("AUC_CI")) %>% 
+  dplyr::filter(!is.na(group)) %>%
+  pivot_longer(
+    cols = starts_with("AUC_"),
+    names_to = "AUC_type",
+    values_to = "AUC_value",
+    names_prefix = "AUC_"
+  ) %>% 
+  dplyr::mutate(
+    AUC_value = ifelse(
+      AUC_value < 1, AUC_value * 100, AUC_value
+    )
+  ) %>% 
+  dplyr::mutate(measure = "AUC") %>%
+  dplyr::rename_with(~ gsub("AUC_", "", .x), starts_with("AUC")) %>%     
+  dplyr::filter(!is.na(value)) %>% 
+  dplyr::filter(type != "feigningADHD")
+
+d_long_both <- dplyr::bind_rows(
+  d_long_accuracy, d_long_AUC
+) %>% dplyr::filter(!is.na(value))
+
+# Make labels nicer.
+
+d_long_both <- d_long_both %>%
+  dplyr::mutate(
+    type = dplyr::case_when(
+     type == "biomarker" ~ "Biomarker",
+     type == "clinician_interview" ~ "Clinician\nTool",
+     type == "combination" ~ "Combination",
+     type == "neuroimaging" ~ "Neuroimaging",
+     type == "observational" ~ "Observational",
+     type == "neuropsycho_tests" ~ "Neuro-\npsychological",
+     type == "peer_rating" ~ "Peer\nRating",
+     type == "self_report" ~ "Self-Report",
+     .default = type
+    ),
+    measure = ifelse(measure == "accuracy", "Accuracy", measure)
+  )
+  
+
+
+d_long_both %>% dplyr::filter(!is.na(value)) %>%
+  dplyr::rename(Group = group) %>%
+  ggplot2::ggplot(
+    aes(x = Group, y = value)
+  )  + 
+  geom_boxplot() +
+  facet_grid(type ~ measure)+
+   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# Figure 7
+d_long_both %>% dplyr::filter(!is.na(value)) %>%
+  dplyr::rename(Group = group) %>%
+  ggplot2::ggplot(
+    aes(x = Group, y = value)
+  )  + 
+  geom_boxplot() +
+  facet_grid(measure ~ type)+
+   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  labs(y = NULL)
+
+
+d_long_both %>% dplyr::filter(!is.na(value)) %>%
+  dplyr::rename(Group = group) %>%
+  ggplot2::ggplot(
+    aes(x = Group, y = value, color = measure)
+  )  + 
+  geom_boxplot() +
+  facet_wrap(~ type) +
+   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+```
+
+# Function to get Accuracy
+
+```{r}
+library(dplyr)
+
+# Function to read CSV and select specific columns
+read_adhd_data <- function(file_path) {
+  
+  # Read the CSV file
+  data <- read.csv(file_path)
+  
+  # Select only the required columns
+  clean_data <- data %>%
+    select(n_ADHD, 
+           sensitivity_self_report, 
+           specificity_self_report,
+           size, ID)
+  
+  return(clean_data)
+}
+
+########################### Usage example
+accuracy <- read_adhd_data(data_location)
+#############################
+
+# Check the result
+head(accuracy)
+
+
+calculate_adhd_stats <- function(data) {
+  
+  processed_data <- data %>%
+    mutate(
+      # 1. Calculate Prevalence (P / Total)
+      Prevalence = n_ADHD / size,
+      
+      # 2. Calculate (1 - Prevalence)
+      One_Minus_Prevalence = 1 - Prevalence,
+      
+      # 3. Create cleaner columns for Sensitivity/Specificity for the formula
+      Sensitivity = sensitivity_self_report,
+      Specificity = specificity_self_report,
+      
+      # 4. Calculate Accuracy
+      # Formula: (Sens * Prev) + (Spec * (1 - Prev))
+      Accuracy = (Sensitivity * Prevalence) + (Specificity * One_Minus_Prevalence)
+    )
+  
+  return(processed_data)
+}
+accuracy <- calculate_adhd_stats(accuracy)
+head(accuracy)
+#install.packages("kableExtra")
+library(kableExtra)
+
+accuracy <- accuracy %>%
+  select(-Sensitivity, -Specificity)
+
+# Create and save in one pipe chain
+output_file <- "C:/Users/SusanneH/OneDrive - University of Southern California/Susanne/USC/ADHD adults/Analysis/accuracy.html"
+
+
+# Create and save
+kableExtra::kbl(accuracy) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  save_kable(file = output_file)
+
+```
+
+## Program Summary of Findings Table
+
+```{r prog_summary}
+# Test: combination
+# Outcome: Clinical_misdiagnosis
+
+
+
+CreateProgSummary <- function(test_outcome_and_result) {
+
+  if (test_outcome_and_result == "cost_self_report") {
+    test_outcome_and_result <- "cost_self.report"
+  }
+  
+  reverse_min_max <- 
+    stringr::str_detect(test_outcome_and_result, "sensitivity") | 
+    stringr::str_detect(test_outcome_and_result, "specificity") 
+  
+  print(test_outcome_and_result)
+
+  if (test_outcome_and_result %in% 
+      c(
+        "admin_self_report", 
+        "admin_neuropsycho_tests", 
+        "cost_neuropsycho_tests",
+        "concordance_self_report",
+        "concordance_neuropsycho_tests",
+        "kappa_neuropsycho_tests",
+        "kappa_neuroimaging")
+      ) {
+    return(
+      data.frame(
+        test_outcome_and_result = test_outcome_and_result,
+        contributing_studies = "Misnamed variable (probably doesn't matter?)",
+        primary_results  = "Misnamed variable"
+        )
+    )
+  }
+  
+  
+  non_numeric_question <- !is.numeric(d[[test_outcome_and_result]]) 
+  
+  d_now <-
+    d %>%
+    dplyr::mutate(!!rlang::sym(test_outcome_and_result) := as.numeric(!!rlang::sym(test_outcome_and_result))) %>%
+    dplyr::filter(!is.na(!!rlang::sym(test_outcome_and_result)))
+  
+  n <- nrow(d_now)
+  min_value <- min(d_now[[test_outcome_and_result]])
+  max_value <- max(d_now[[test_outcome_and_result]])
+  
+  min_id <- d_now[which(d_now[[test_outcome_and_result]] == min_value), "Refid"] %>% paste0(., collapse = ", ")
+  max_id <- d_now[which(d_now[[test_outcome_and_result]] == max_value), "Refid"] %>% paste0(., collapse = ", ")
+  
+  
+  contributing_studies <- (glue::glue(
+    "{paste(d_now$ID)}")
+  ) %>% as.character() %>% paste(., collapse = "; ")
+  
+  if(non_numeric_question) {
+    contributing_studies <- primary_results <- "Warning: non-numeric result."
+  } else {
+    contributing_studies <- 
+      glue::glue("{n} studies ({contributing_studies})")
+    if (!reverse_min_max) {
+    primary_results <- 
+      glue::glue(
+        "{min_value}(#{min_id}) to {max_value}(#{max_id})"
+        )
+    } else {
+      primary_results <- 
+      glue::glue(
+        "{max_value}(#{max_id}) to {min_value}(#{min_id})"
+        )
+    }
+  
+  }
+  
+  
+  return(
+    data.frame(
+      test_outcome_and_result = test_outcome_and_result,
+      contributing_studies = contributing_studies,
+      primary_results = primary_results))
+}
+                
+  
+kq_outcome <- c(
+  "clinical_misdiagnosis",
+  "sensitivity",
+  "specificity",
+  "admin",
+  "kappa",
+  "ICC",
+  "cost",
+  "concordance"
+)
+
+kq_index_test <- c(
+  "combination",
+  "self_report",
+  "peer_rating",
+  "neuropsycho_tests",
+  "neuroimaging",
+  "EEG",
+  "biomarker",
+  "observational",
+  "clinician_interview",
+  "clinician_tool",
+  "feigningADHD"
+)  
+ 
+all_kqs <- 
+  expand_grid(kq_index_test, kq_outcome ) %>% 
+  dplyr::select(kq_outcome, kq_index_test) %>% 
+  apply(., 1, paste0, collapse = "_")
+
+
+
+res <- lapply(all_kqs, CreateProgSummary)
+
+writexl::write_xlsx(dplyr::bind_rows(res), "../analysis/adhd_adults_diagnosis_SoF.xlsx")
+
+```
