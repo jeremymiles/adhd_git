@@ -269,12 +269,6 @@ plot_data %>%
   dplyr::arrange(desc(n)) %>%
   knitr::kable()
 
-# 2. Inspect your data (optional, but highly recommended for debugging)
-# print(str(plot_data))
-# print(summary(plot_data$size))
-# print(sum(is.na(plot_data$size)))
-# print(range(plot_data$size, na.rm = TRUE))
-
 # 1. Define your colors in a named vector
 # You must assign a color to every category, or the others will disappear/turn grey.
 my_colors <- c(
