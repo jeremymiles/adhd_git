@@ -857,6 +857,12 @@ plot_diagnostic_meta <-
 ```
 
 ```{r}
+
+
+
+#| fig-width: 14
+#| fig-height: 14
+#| 
 # Define the categories you want to loop through
 categories <- c("self_report", "peer_rating", "neuropsycho_tests", "neuroimaging", 
                 "clinician_interview", "combination", "biomarker", "EEG")
