@@ -212,8 +212,6 @@ ContMA <- function(
       
       cat("<h6>Trim and Fill</h6>")
       
-      # Line below breaks quarto
-      #metafor::trimfill(fit_ma) %>% print()
       cat("Estimate and Cis<p>")
       coef(summary(trimfill(fit_ma))) %>%
         as.data.frame() %>%
