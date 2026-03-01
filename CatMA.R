@@ -157,18 +157,6 @@ CatMA <- function(
       fonts = "Arial"
     )
     
-    # Put thsi back if needed, and fix var names
-    #cat(
-    #  glue::glue(
-    #    "Number of studies = {nrow(d_es)}<p>
-    #  Intervention sample =  {sum(d_es[[n_int_categ]])} <p>
-    #  Control sample = {sum(d_es[[n_ctrl_categ]])}  <p>
-    #  Total sample = {sum(d_es[[n_int_categ]]) +
-    #  sum(d_es[[n_ctrl_categ]])}. <p>
-    #  "
-    #  )
-    #)
-    
     cat("<p>relative Risk Estimate<p>")
     coef(summary(fit_ma)) %>%
       as.data.frame() %>%
