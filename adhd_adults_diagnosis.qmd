@@ -764,12 +764,9 @@ plot_diagnostic_meta <-
     instrument_col
   ) {
     
-    print(instrument_col)        
+    cat(glue::glue("##", instrument_col, "\n"))
+    
     data[[instrument_col]] <- stringr::word(data[[instrument_col]])
-    
-    print(data[[instrument_col]])        
-    
-    
     
     dat_sens <- metafor::escalc(
       measure = "PLO", 
