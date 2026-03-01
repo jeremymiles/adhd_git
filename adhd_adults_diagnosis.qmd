@@ -587,7 +587,6 @@ calculate_adhd_stats <- function(data) {
 }
 accuracy <- calculate_adhd_stats(accuracy)
 head(accuracy)
-#install.packages("kableExtra")
 
 
 accuracy <- accuracy %>%
