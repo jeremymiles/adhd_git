@@ -11,6 +11,7 @@ editor: visual
 ```{r}
 
 library(dplyr)
+library(ellipse)
 library(ggplot2)
 library(ggrepel)
 library(kableExtra)
@@ -81,7 +82,7 @@ d_sens_long <- d_sens %>%
   ) %>%
   dplyr::rename(sensitivity = value)%>%
   dplyr::mutate(name = stringr::str_remove(name, "sensitivity_"))
-  
+
 
 
 d_spec_long <- d_spec %>%
@@ -105,18 +106,18 @@ d_ss_long <- dplyr::full_join(
     name = stringr::str_replace_all(name, "_", " "),
     name = ifelse(
       name == "Neuropsycho tests", "Neuropsychological Test", name
-      ),
+    ),
     name = ifelse(
       name == "Self report", "Self-Report Questionnaire", name
-      ),
+    ),
     name = ifelse(
       name == "Peer rating", "Peer-Rating", name
-      ),
+    ),
     name = ifelse(
       name == "Clinician interview", "Clinician Tool", name
-      ),
+    ),
     
-)
+  )
 
 # mark neurotypicals
 d_neurotypical <- d %>% dplyr::select(ID, Neurotypical, size) %>% 
@@ -127,11 +128,11 @@ d_neurotypical <- d %>% dplyr::select(ID, Neurotypical, size) %>%
 d_neurotypical_Only <- d %>% 
   dplyr::mutate(
     Neurotypical_Only = Neurotypical == "Neurotypical" &
-        Clinical != "Clinical" &
-        Autism != "Autism" &
-        Antisocial != "Antisocial" &
-        Depression != "Depression" &
-        Feigning != "Feigning"
+      Clinical != "Clinical" &
+      Autism != "Autism" &
+      Antisocial != "Antisocial" &
+      Depression != "Depression" &
+      Feigning != "Feigning"
   ) %>% dplyr::select(ID, Neurotypical_Only, size)
 
 
@@ -155,7 +156,7 @@ d_ss_long <- d_ss_long %>%
   dplyr::full_join(
     d_neurotypical_Only
   ) %>% 
-    dplyr::filter(!is.na(name))
+  dplyr::filter(!is.na(name))
 
 ggplot2::ggplot(
   d_ss_long, 
@@ -164,7 +165,9 @@ ggplot2::ggplot(
     y = specificity)) +
   geom_point() +
   xlab("Sensitivity (%)") + 
-  ylab("Specificity (%)")
+  ylab("Specificity (%)") +
+  xlim(c(0, 100)) + 
+  ylim(c(0, 100))
 
 
 d_ss_long <- d_ss_long %>%
@@ -184,7 +187,9 @@ ggplot2::ggplot(
   ylab("Specificity (%)") +
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  xlim(c(0, 100)) + 
+  ylim(c(0, 100))
 ```
 
 ```{r}
@@ -203,7 +208,9 @@ ggplot2::ggplot(
   guides(colour = "none") +
   labs(
     shape = "Neurotypical only"
-  )
+  ) +
+  xlim(c(0, 100)) + 
+  ylim(c(0, 100))
 
 # separate charts
 for (name_1 in d_ss_long$name) {
@@ -220,7 +227,9 @@ for (name_1 in d_ss_long$name) {
     labs(
       shape = "Neurotypical only"
     ) +
-    ggtitle(name_1)
+    ggtitle(name_1) +
+    xlim(c(0, 100)) + 
+    ylim(c(0, 100))
   print(plot)
 }
 
@@ -307,7 +316,10 @@ ggplot2::ggplot(
     guide = "legend", # Explicitly request a legend
     # Set limits based on the *transformed* size values from your plot_data
     # This is crucial for the scale to match your actual plotted points
-  ) +  theme(legend.position = "right")
+  ) + 
+  theme(legend.position = "right") +
+  xlim(c(0, 100)) + 
+  ylim(c(0, 100))
 
 
 d_test_description_np <- d %>%
@@ -316,7 +328,7 @@ d_test_description_np <- d %>%
   ) %>% 
   dplyr::distinct() %>% 
   dplyr::mutate(
-      test_description = word(test_description_neuropsycho_tests, 1)
+    test_description = word(test_description_neuropsycho_tests, 1)
   ) 
 
 d_test_description_np %>%
@@ -350,12 +362,12 @@ plot_data <- plot_data %>%
       ifelse(substr(test_description, 1, 4) == "MOXO", "MOXO", `Frequent Tools`),
     `Frequent Tools` = 
       ifelse(substr(test_description, 1, 6) == "QbTest", "QbTest", `Frequent Tools`
-             ),
+      ),
     `Frequent Tools` = 
       ifelse(substr(test_description, 1, 5) == "Go-No", "Go-NoGo", `Frequent Tools`)
   )
-  
-  my_colors <- c(
+
+my_colors <- c(
   "AQT"  = "red",    # Replace with your preferred color
   "C-CPT" = "blue",   # Replace with your preferred color
   "MOXO" = "darkgreen",  # Replace with your preferred color
@@ -363,22 +375,26 @@ plot_data <- plot_data %>%
   "Go-NoGo" = "yellow",
   "Other" = "black"   # The specific requirement
 )
-  
-  plot_data %>% ggplot2::ggplot(
-    aes(
-      x = sensitivity, 
-      y = specificity,
-      shape = Neurotypical_Only, size = size,
+
+plot_data %>% ggplot2::ggplot(
+  aes(
+    x = sensitivity, 
+    y = specificity,
+    shape = Neurotypical_Only, size = size,
     color = `Frequent Tools`)
-    ) +
+) +
   geom_point() +
   scale_color_manual(values = my_colors) +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
-    labs(
+  labs(
     shape = "Neurotypical only"
-  ) +  theme(legend.position = "right")
+  ) + 
+  theme(legend.position = "right") +
+  xlim(c(0, 100)) + 
+  ylim(c(0, 100))
+
 
 
 ```
@@ -481,19 +497,19 @@ d_long_both <- dplyr::bind_rows(
 d_long_both <- d_long_both %>%
   dplyr::mutate(
     type = dplyr::case_when(
-     type == "biomarker" ~ "Biomarker",
-     type == "clinician_interview" ~ "Clinician\nTool",
-     type == "combination" ~ "Combination",
-     type == "neuroimaging" ~ "Neuroimaging",
-     type == "observational" ~ "Observational",
-     type == "neuropsycho_tests" ~ "Neuro-\npsychological",
-     type == "peer_rating" ~ "Peer\nRating",
-     type == "self_report" ~ "Self-Report",
-     .default = type
+      type == "biomarker" ~ "Biomarker",
+      type == "clinician_interview" ~ "Clinician\nTool",
+      type == "combination" ~ "Combination",
+      type == "neuroimaging" ~ "Neuroimaging",
+      type == "observational" ~ "Observational",
+      type == "neuropsycho_tests" ~ "Neuro-\npsychological",
+      type == "peer_rating" ~ "Peer\nRating",
+      type == "self_report" ~ "Self-Report",
+      .default = type
     ),
     measure = ifelse(measure == "accuracy", "Accuracy", measure)
   )
-  
+
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -503,7 +519,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -513,7 +529,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(measure ~ type)+
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
   labs(y = NULL)
 
 
@@ -524,7 +540,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
 ```
@@ -606,7 +622,7 @@ kableExtra::kbl(accuracy) %>%
 
 
 CreateProgSummary <- function(test_outcome_and_result) {
-
+  
   if (test_outcome_and_result == "cost_self_report") {
     test_outcome_and_result <- "cost_self.report"
   }
@@ -616,7 +632,7 @@ CreateProgSummary <- function(test_outcome_and_result) {
     stringr::str_detect(test_outcome_and_result, "specificity") 
   
   print(test_outcome_and_result)
-
+  
   if (test_outcome_and_result %in% 
       c(
         "admin_self_report", 
@@ -626,13 +642,13 @@ CreateProgSummary <- function(test_outcome_and_result) {
         "concordance_neuropsycho_tests",
         "kappa_neuropsycho_tests",
         "kappa_neuroimaging")
-      ) {
+  ) {
     return(
       data.frame(
         test_outcome_and_result = test_outcome_and_result,
         contributing_studies = "Misnamed variable (probably doesn't matter?)",
         primary_results  = "Misnamed variable"
-        )
+      )
     )
   }
   
@@ -662,17 +678,17 @@ CreateProgSummary <- function(test_outcome_and_result) {
     contributing_studies <- 
       glue::glue("{n} studies ({contributing_studies})")
     if (!reverse_min_max) {
-    primary_results <- 
-      glue::glue(
-        "{min_value}(#{min_id}) to {max_value}(#{max_id})"
+      primary_results <- 
+        glue::glue(
+          "{min_value}(#{min_id}) to {max_value}(#{max_id})"
         )
     } else {
       primary_results <- 
-      glue::glue(
-        "{max_value}(#{max_id}) to {min_value}(#{min_id})"
+        glue::glue(
+          "{max_value}(#{max_id}) to {min_value}(#{min_id})"
         )
     }
-  
+    
   }
   
   
@@ -682,8 +698,8 @@ CreateProgSummary <- function(test_outcome_and_result) {
       contributing_studies = contributing_studies,
       primary_results = primary_results))
 }
-                
-  
+
+
 kq_outcome <- c(
   "clinical_misdiagnosis",
   "sensitivity",
@@ -708,7 +724,7 @@ kq_index_test <- c(
   "clinician_tool",
   "feigningADHD"
 )  
- 
+
 all_kqs <- 
   expand_grid(kq_index_test, kq_outcome ) %>% 
   dplyr::select(kq_outcome, kq_index_test) %>% 
@@ -733,8 +749,8 @@ writexl::write_xlsx(dplyr::bind_rows(res), "adhd_adults_diagnosis_SoF.xlsx")
 d$test_description_self_report <- word(d$test_description_self, 1)
 d$test_description_peer_rating <- d$test_description_peer
 
-  
-  # If you want to clean up any trailing spaces left behind:
+
+# If you want to clean up any trailing spaces left behind:
 d <- d %>%
   dplyr::mutate(
     study = gsub("\\{.*\\}", "", ID),
@@ -756,6 +772,10 @@ self_report peer_rating neuropsycho_tests neuroimaging clinician_interview combi
 #| fig-width: 14
 #| fig-height: 14
 
+inv_logit <- function(x) { exp(x) / (1 + exp(x)) }
+logit <- function(x) { log(x / (1 - x)) }
+
+
 plot_diagnostic_meta <- 
   function(
     data, diag_type_name, 
@@ -763,8 +783,6 @@ plot_diagnostic_meta <-
     true_neg, false_pos,
     instrument_col
   ) {
-    
-    cat(glue::glue("##", instrument_col, "\n"))
     
     data[[instrument_col]] <- stringr::word(data[[instrument_col]])
     
@@ -864,6 +882,95 @@ plot_diagnostic_meta <-
       transf = transf.ilogit, 
       mlab = "", col = "red", cex = cex
     )
+    
+    
+    ### Now do pooled ROC
+    
+    inv_logit <- function(x) { exp(x) / (1 + exp(x)) }
+
+    # Create the study_data data frame for ggplot
+    study_data <- data.frame(
+      # 1. Back-transform logit specificity to raw specificity, then calculate FPR
+      fpr = 1 - inv_logit(dat_spec$yi),
+      
+      # 2. Back-transform logit sensitivity to raw sensitivity
+      sens = inv_logit(dat_sens$yi),
+      
+      # 3. Pull the strategy names from your original data frame
+      # (using the column you cleaned with stringr::word)
+      strategy = data[[instrument_col]]
+    )
+    study_data$weight <- 1 / dat_sens$vi
+    
+    # 2. Extract the Fixed Effects (Summary Points)
+    # (Assuming intercept 1 is logit_FPR and intercept 2 is logit_Se)
+    mu_fpr <- res$beta[1] 
+    mu_se  <- res$beta[2] 
+    
+    # 3. Extract Random Effects (Variances and Correlation)
+    # 'tau2' contains the variances, 'rho' is the correlation in rma.mv
+    sigma_fpr <- sqrt(res$tau2[1]) 
+    sigma_se  <- sqrt(res$tau2[2]) 
+    rho       <- res$rho
+    
+    # 4. Generate the Sequence of FPR values for the x-axis
+    # We use a sequence from 0.01 to 0.99 to avoid infinity in logit
+    fpr_seq <- seq(0.01, 0.99, length.out = 100)
+    logit_fpr_seq <- logit(fpr_seq)
+    
+    # 5. Calculate Expected logit(Sensitivity) using the SROC formula
+    logit_se_seq <- mu_se + rho * (sigma_se / sigma_fpr) * (logit_fpr_seq - mu_fpr)
+    
+    # 6. Back-transform to normal scale (0 to 1)
+    sens_seq <- inv_logit(logit_se_seq)
+    
+    # 7. Create the data frame for ggplot2
+    sroc_data <- data.frame(
+      fpr = fpr_seq,
+      sens = sens_seq
+    )
+    
+    
+    mu_fixed <- c(res$beta[1], res$beta[2]) 
+    V_fixed  <- vcov(res)[1:2, 1:2] # Variance-covariance matrix of the fixed effects
+    
+    # 3. Create the Summary Point Data Frame
+    summary_point <- data.frame(
+      fpr = inv_logit(mu_fixed[1]),
+      sens = inv_logit(mu_fixed[2])
+    )
+    
+    # 4. Generate 95% Confidence Ellipse in Logit Space
+    # The ellipse() function creates 100 coordinates outlining the region
+    ellipse_logit <- ellipse::ellipse(V_fixed, centre = mu_fixed, level = 0.95)
+    
+    # 5. Back-transform Ellipse Coordinates to Probability Space (0 to 1)
+    ellipse_data <- data.frame(
+      fpr = inv_logit(ellipse_logit[, 1]),
+      sens = inv_logit(ellipse_logit[, 2])
+    )
+
+    
+    
+    plot2 <- 
+      ggplot(sroc_data, aes(x = fpr, y = sens)) +
+      geom_line(linewidth = 1.2) +
+      # Match the visual style of the published plot
+      scale_x_continuous(name = "False-Positive Rate", limits = c(0, 1), expand = c(0, 0)) +
+      scale_y_continuous(name = "Sensitivity", limits = c(00, 1.0), expand = c(0, 0)) +
+      theme_classic() +
+      theme(
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        panel.grid.major = element_line(color = "grey95"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")
+      ) +
+      geom_path(data = ellipse_data, aes(x = fpr, y = sens), linewidth = 0.8) +
+      geom_point(data = study_data, aes(x = fpr, y = sens, size = weight), 
+             alpha = 0.5) 
+    
+    print(plot2)
   }
 
 
