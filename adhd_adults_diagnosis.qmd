@@ -13,6 +13,7 @@ editor: visual
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
+library(kableExtra)
 library(metafor)
 library(stringr)
 library(tidyr)
@@ -537,8 +538,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
 # *Function to get Accuracy*
 
 ```{r}
-library(dplyr)
-library(kableExtra)
+
 
 # Function to read CSV and select specific columns
 read_adhd_data <- function(file_path) {
