@@ -819,14 +819,17 @@ plot_diagnostic_meta <-
     
     metafor::forest(
       dat_sens_plot$yi, vi = dat_sens_plot$vi, slab = dat_sens_plot$study,
-      transf = transf.ilogit, xlim = c(-4.5, 1.5), 
+      transf = transf.ilogit,
+      xlim = c(-1.2, 2.5), 
       ylim = c(-2, k_total + 3), 
+      alim = c(0, 1),
+      steps = 5,
       rows = all_studies$row_num, header = "Study", 
       main = paste("Sensitivity"), 
       refline = NA, cex = cex)
     
-    text(-3.0, k_total + 2, "Instrument", pos = 4, cex = cex, font = 2) 
-    text(-3.0, all_studies$row_num, all_studies$instrument_label, 
+    text(-0.5, k_total + 2, "Instrument", pos = 4, cex = cex, font = 2) 
+    text(-0.5, all_studies$row_num, all_studies$instrument_label, 
          pos = 4, cex = cex
     )
     addpoly(res$beta[1], sei = res$se[1],
@@ -842,7 +845,11 @@ plot_diagnostic_meta <-
       dat_spec_plot$yi, 
       vi = dat_spec_plot$vi, 
       slab = NA, transf = transf.ilogit, 
-      xlim = c(-0.5, 1.5), ylim = c(-2, k_total + 3), rows = all_studies$row_num,
+      xlim = c(-0.1, 2), 
+      ylim = c(-2, k_total + 3), 
+      rows = all_studies$row_num,
+      alim = c(0, 1),
+      steps = 5,
       header = "", main = "Specificity", refline = NA, cex = cex)
     
     addpoly(
@@ -854,6 +861,12 @@ plot_diagnostic_meta <-
     )
   }
 
+
+categories <- c("self_report", "peer_rating", "neuropsycho_tests", "neuroimaging", 
+                "clinician_interview", "combination", "biomarker", "EEG")
+
+
+
 ```
 
 ```{r}
@@ -864,8 +877,6 @@ plot_diagnostic_meta <-
 #| fig-height: 14
 #| 
 # Define the categories you want to loop through
-categories <- c("self_report", "peer_rating", "neuropsycho_tests", "neuroimaging", 
-                "clinician_interview", "combination", "biomarker", "EEG")
 
 for (category in categories) {
   # Dynamically construct column names
