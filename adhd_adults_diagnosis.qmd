@@ -876,23 +876,26 @@ metafor::forest(dat_sens_plot$yi_plot,
                 border = dat_sens_plot$pt_col,
                 # Force the text in the right margin to be white for missing data
                 colout = dat_sens_plot$pt_col, 
-                header = "Study", main = "Sensitivity", cex = 0.6)
+                header = "Study", main = "Sensitivity", cex = 0.8)
 
 addpoly(res$beta[1], sei = res$se[1], row = -1, 
-        transf = transf.ilogit, mlab = "Pooled Sensitivity", col = "red", cex = 0.6)
+        transf = transf.ilogit, mlab = "Pooled Sensitivity", col = "red", cex = 0.8)
 
 # --- SPECIFICITY ---
 metafor::forest(dat_spec_plot$yi_plot, 
                 vi = dat_spec_plot$vi_plot, 
-                slab = all_studies$study,
+                # Set slab to NA to remove the names on this side
+                slab = NA,                       
                 transf = transf.ilogit, 
                 ylim = c(-2, k_total + 3), 
                 rows = all_studies$row_num,
                 col = dat_spec_plot$pt_col,
                 border = dat_spec_plot$pt_col,
                 colout = dat_spec_plot$pt_col,
-                header = "Study", main = "Specificity", cex = 0.6)
+                header = " ", # Also clear the "Study" header
+                main = "Specificity", 
+                cex = 0.8)
 
 addpoly(res$beta[2], sei = res$se[2], row = -1, 
-        transf = transf.ilogit, mlab = "Pooled Specificity", col = "red", cex = 0.6)
+        transf = transf.ilogit, mlab = "Pooled Specificity", col = "red", cex = 0.8)
 ```
