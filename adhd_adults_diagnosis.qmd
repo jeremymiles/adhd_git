@@ -18,12 +18,13 @@ library(stringr)
 library(tidyr)
 library(writexl)
 
-data_location <- "https://raw.githubusercontent.com/jeremymiles/adhd_git/refs/heads/main/data/diagnosis_data.csv"
+data_location <- "https://github.com/jeremymiles/adhd_git/raw/refs/heads/main/data/distillersr-AHRQ_Adult_ADHD_Diagnosis_and_Treatment_USC_2026-03-01-00-26-54.csv"
 
 d <- read.csv(data_location)
 
+### TEMP - REMOVE
 d <- d %>%
-  dplyr::rename(true_negative_self_report = true_negative_self.report)
+  dplyr::filter(ID != "Harrison, 2019{#351}") 
 
 capitalize_first <- function(s) {
   if (is.na(s) || s == "") { #Handle NAs and empty strings
@@ -236,7 +237,7 @@ cat("self report<p>")
 # 1. Prepare your data first
 plot_data <- d_ss_long %>%
   dplyr::filter(
-    name == "Self-Report"
+    name == "Self-Report Questionnaire"
   ) %>%
   dplyr::inner_join(
     d_test_description_self
@@ -251,10 +252,14 @@ plot_data <- d_ss_long %>%
 plot_data <- plot_data %>%
   dplyr::mutate(
     `Frequent Tools` = "Other",
-    `Frequent Tools` = ifelse(substr(test_description, 1, 5) == "CAARS", "CAARS", `Frequent Tools`),
-    `Frequent Tools` = ifelse(substr(test_description, 1, 5) == "BAARS", "BAARS", `Frequent Tools`),
-    `Frequent Tools` = ifelse(substr(test_description, 1, 4) == "ASRS", "ASRS", `Frequent Tools`),
-    `Frequent Tools` = ifelse(substr(test_description, 1, 4) == "WURS", "WURS", `Frequent Tools`)
+    `Frequent Tools` = ifelse(substr(test_description, 1, 5) == "CAARS",
+                              "CAARS", `Frequent Tools`),
+    `Frequent Tools` = ifelse(substr(test_description, 1, 5) == "BAARS", 
+                              "BAARS", `Frequent Tools`),
+    `Frequent Tools` = ifelse(substr(test_description, 1, 4) == "ASRS", 
+                              "ASRS", `Frequent Tools`),
+    `Frequent Tools` = ifelse(substr(test_description, 1, 4) == "WURS", 
+                              "WURS", `Frequent Tools`)
   )
 
 plot_data %>%
@@ -331,7 +336,7 @@ rm(plot_data)
 cat("Neuropsychological \n Tests<p>")
 plot_data <- d_ss_long %>%
   dplyr::filter(
-    name == "Neuropsychological \n Tests"
+    name == "Neuropsychological Test"
   ) %>%dplyr::inner_join(
     d_test_description_np
   ) %>%
@@ -724,17 +729,34 @@ writexl::write_xlsx(dplyr::bind_rows(res), "adhd_adults_diagnosis_SoF.xlsx")
 
 ```
 
+```{r}
+d$instrument_self_report <- stringr::word(d$test_description_self, 1)
+```
+
 ## *Sensitivity and Specificity Meta-Analysis*
 
 ```{r}
 
 
+```
 
-# Assuming your data frame is called 'dat'
-d$study <- gsub("\\{.*\\}", "", d$ID)
+```{r}
+#| fig-width: 14
+#| fig-height: 14
 
-# If you want to clean up any trailing spaces left behind:
-d$study <- trimws(d$study)
+
+
+  
+  # If you want to clean up any trailing spaces left behind:
+d <- d %>%
+  dplyr::mutate(
+    study = gsub("\\{.*\\}", "", ID),
+    study = trimws(study),
+    study = ifelse(study == "van de Glind, 2013", "Van de Glind, 2013", study)
+  )
+
+d$instrument_self_report <- word(d$test_description_self, 1)
+
 
 # Calculate Logit Sensitivity
 dat_sens <- 
@@ -760,6 +782,17 @@ dat_spec <- dat_spec %>% dplyr::arrange(desc(study))
 dat_long <- rbind(dat_sens, dat_spec)
 dat_long <- dat_long[order(dat_long$study), ] # Group by study
 
+
+all_studies <- dat_long %>%
+  group_by(study, instrument_self_report) %>%
+  # Keep studies where at least one row (sens or spec) is not NA
+  filter(any(!is.na(yi))) %>%
+  ungroup() %>%
+  # Get the unique names and sort them alphabetically
+  distinct(study) %>%
+  arrange(desc(study)) %>%
+  # Assign the fixed row numbers for the plots
+  mutate(row_num = row_number())
 
 res <- metafor::rma.mv(
   yi, vi, 
@@ -822,9 +855,6 @@ addpoly(res$beta[2],
         mlab = "Pooled Specificity",
         col = "red")
 
-```
-
-```{r}
 
 all_studies <- dat_long %>%
   group_by(study) %>%
@@ -850,7 +880,8 @@ dat_sens_plot <- all_studies %>%
     vi_plot = ifelse(is_missing, 0.001, vi), # Provide a tiny dummy variance
     # Create a color vector: "black" for real data, "white" for missing
     pt_col = ifelse(is_missing, "white", "black")
-  )
+  ) %>%
+  dplyr::arrange(instrument_self_report, study)
 
 dat_spec_plot <- all_studies %>% 
   left_join(filter(dat_long, outcome == "spec"), by = "study") %>%
@@ -859,43 +890,68 @@ dat_spec_plot <- all_studies %>%
     yi_plot = ifelse(is_missing, 0.5, yi),
     vi_plot = ifelse(is_missing, 0.001, vi),
     pt_col = ifelse(is_missing, "white", "black")
-  )
+  )%>%
+  dplyr::arrange(instrument_self_report, study)
 
-# 2. Side-by-Side Plot
-par(mfrow=c(1,2), mar=c(5,4,3,2))
+# set text size
+cex = 0.6
+
+# 1. Define a layout where the first column is nearly twice as wide as the second
+# The widths = c(1.8, 1) ratio gives the left plot more 'breathing room'
+layout(matrix(c(1, 2), nrow = 1), widths = c(1.5, 1))
+
+# 2. Adjust margins: Reduce the left margin of the Specificity plot (plot 2)
+# Sensitivity margins (standard)
+par(mar = c(5, 4, 3, 1)) 
 
 # --- SENSITIVITY ---
+# Use a wider xlim to accommodate the text columns
+xlim_sens <- c(-1, 1.5)
+
 metafor::forest(dat_sens_plot$yi_plot, 
                 vi = dat_sens_plot$vi_plot, 
-                slab = all_studies$study,
+                slab = dat_sens_plot$study,
                 transf = transf.ilogit, 
+                xlim = xlim_sens,        
                 ylim = c(-2, k_total + 3), 
                 rows = all_studies$row_num,
-                # Color tricking: make points and bars white for missing data
                 col = dat_sens_plot$pt_col,
-                border = dat_sens_plot$pt_col,
-                # Force the text in the right margin to be white for missing data
-                colout = dat_sens_plot$pt_col, 
-                header = "Study", main = "Sensitivity", cex = 0.8)
+                header = "Study", 
+                main = "Sensitivity", 
+                refline = NA,
+                cex = cex)
+
+text(-0.5, k_total + 2, "Instrument", pos = 4, cex = cex, font = 2) 
+text(-0.5, all_studies$row_num, dat_sens_plot$instrument_self_report, pos = 4, cex = cex)
 
 addpoly(res$beta[1], sei = res$se[1], row = -1, 
-        transf = transf.ilogit, mlab = "Pooled Sensitivity", col = "red", cex = 0.8)
+        transf = transf.ilogit, mlab = "", col = "red", cex = cex)
+
+# 3. Switch to the second plot and tighten its margins
+par(mar = c(5, 1, 3, 2)) 
 
 # --- SPECIFICITY ---
+# Use a much tighter xlim since there are no labels on the left
+xlim_spec <- c(-0.5, 1.5)
+
 metafor::forest(dat_spec_plot$yi_plot, 
                 vi = dat_spec_plot$vi_plot, 
-                # Set slab to NA to remove the names on this side
                 slab = NA,                       
                 transf = transf.ilogit, 
+                xlim = xlim_spec,
                 ylim = c(-2, k_total + 3), 
                 rows = all_studies$row_num,
                 col = dat_spec_plot$pt_col,
-                border = dat_spec_plot$pt_col,
-                colout = dat_spec_plot$pt_col,
-                header = " ", # Also clear the "Study" header
+                header = "", 
                 main = "Specificity", 
-                cex = 0.8)
+                refline = NA,
+                cex = cex)
 
 addpoly(res$beta[2], sei = res$se[2], row = -1, 
-        transf = transf.ilogit, mlab = "Pooled Specificity", col = "red", cex = 0.8)
+        transf = transf.ilogit, mlab = "", col = "red", cex = cex)
+
+```
+
+```{r}
+
 ```
