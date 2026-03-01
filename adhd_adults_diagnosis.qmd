@@ -24,8 +24,8 @@ data_location <- "https://github.com/jeremymiles/adhd_git/raw/refs/heads/main/da
 d <- read.csv(data_location)
 
 ### TEMP - REMOVE
-d <- d %>%
-  dplyr::filter(ID != "Harrison, 2019{#351}") 
+#d <- d %>%
+#  dplyr::filter(ID != "Harrison, 2019{#351}") 
 
 capitalize_first <- function(s) {
   if (is.na(s) || s == "") { #Handle NAs and empty strings
@@ -802,9 +802,14 @@ plot_diagnostic_meta <-
     # 3. Setup Plotting Layout
     all_studies <- dat_long %>%
       distinct(study) %>%
-      arrange(desc(study)) %>%
-      mutate(row_num = row_number(),
-             instrument_label = data[[instrument_col]][match(study, data$study)])
+      # Add the instrument label early so we can sort by it
+      mutate(instrument_label = data[[instrument_col]][match(study, data$study)]) %>%
+      # SORTING: Instrument (A-Z) and then Study (A-Z)
+      # We arrange in ASCENDING order here...
+      arrange(instrument_label, study) %>%
+      # ...then we assign row_num so that the first item gets the HIGHEST row 
+      # (putting it at the top of the plot)
+      mutate(row_num = rev(row_number()))
     
     k_total <- nrow(all_studies)
     cex <- 0.6
