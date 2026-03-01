@@ -822,7 +822,7 @@ plot_diagnostic_meta <-
       transf = transf.ilogit, xlim = c(-4.5, 1.5), 
       ylim = c(-2, k_total + 3), 
       rows = all_studies$row_num, header = "Study", 
-      main = paste(diag_type_name, "- Sens"), 
+      main = paste("Sensitivity"), 
       refline = NA, cex = cex)
     
     text(-3.0, k_total + 2, "Instrument", pos = 4, cex = cex, font = 2) 
@@ -843,7 +843,7 @@ plot_diagnostic_meta <-
       vi = dat_spec_plot$vi, 
       slab = NA, transf = transf.ilogit, 
       xlim = c(-0.5, 1.5), ylim = c(-2, k_total + 3), rows = all_studies$row_num,
-      header = "", main = "Spec", refline = NA, cex = cex)
+      header = "", main = "Specificity", refline = NA, cex = cex)
     
     addpoly(
       res$beta[2], 
