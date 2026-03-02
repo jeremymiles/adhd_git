@@ -280,12 +280,13 @@ plot_data %>%
 
 # 1. Define your colors in a named vector
 # You must assign a color to every category, or the others will disappear/turn grey.
+# Using Okabe-Ito colorblind-friendly palette
 my_colors <- c(
-  "ASRS"  = "red",    # Replace with your preferred color
-  "CAARS" = "blue",   # Replace with your preferred color
-  "BAARS" = "darkgreen",  # Replace with your preferred color
-  "WURS" = "brown4",  # Replace with your preferred color
-  "Other" = "black"   # The specific requirement
+  "ASRS"  = "#E69F00",  # Orange
+  "CAARS" = "#56B4E9",  # Sky blue
+  "BAARS" = "#009E73",  # Bluish green
+  "WURS"  = "#CC79A7",  # Reddish purple
+  "Other" = "#000000"   # Black
 )
 
 # 2. Plot
@@ -367,13 +368,14 @@ plot_data <- plot_data %>%
       ifelse(substr(test_description, 1, 5) == "Go-No", "Go-NoGo", `Frequent Tools`)
   )
 
+# Using Okabe-Ito colorblind-friendly palette
 my_colors <- c(
-  "AQT"  = "red",    # Replace with your preferred color
-  "C-CPT" = "blue",   # Replace with your preferred color
-  "MOXO" = "darkgreen",  # Replace with your preferred color
-  "QbTest" = "chocolate4",
-  "Go-NoGo" = "yellow",
-  "Other" = "black"   # The specific requirement
+  "AQT"     = "#E69F00", # Orange
+  "C-CPT"   = "#56B4E9", # Sky blue
+  "MOXO"    = "#009E73", # Bluish green
+  "QbTest"  = "#0072B2", # Blue
+  "Go-NoGo" = "#D55E00", # Vermilion (replaces low-contrast yellow)
+  "Other"   = "#000000"  # Black
 )
 
 plot_data %>% ggplot2::ggplot(
