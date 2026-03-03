@@ -746,7 +746,7 @@ writexl::write_xlsx(dplyr::bind_rows(res), "adhd_adults_diagnosis_SoF.xlsx")
 ## Sensitivity and Specificity Meta-Analysis
 
 ```{r}
-#
+#| results: asis
 d$test_description_self_report <- word(d$test_description_self, 1)
 d$test_description_peer_rating <- d$test_description_peer
 
@@ -793,7 +793,7 @@ plot_diagnostic_meta <-
     true_neg, false_pos,
     instrument_col
   ) {
-    
+    cat(glue::glue("<h2>{diag_type_name}</h2>"))
     data[[instrument_col]] <- stringr::word(data[[instrument_col]])
     
     dat_sens <- metafor::escalc(
@@ -847,7 +847,7 @@ plot_diagnostic_meta <-
     cex <- 0.6
     
     layout(matrix(c(1, 2), nrow = 1), widths = c(1.8, 1))
-    cat(glue::glue("<h2>{diag_type_name}</h2>"))
+    
     
     # 4. Plot Sensitivity
     par(mar = c(5, 4, 3, 1))
@@ -1002,9 +1002,6 @@ categories <- c("self_report", "peer_rating", "neuropsycho_tests", "neuroimaging
 ```
 
 ```{r}
-
-
-
 #| fig-width: 14
 #| fig-height: 14
 #| results: asis
