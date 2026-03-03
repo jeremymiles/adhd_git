@@ -10,6 +10,7 @@ editor: visual
 
 ```{r}
 
+library(dmetar)
 library(dplyr)
 library(ellipse)
 library(ggplot2)
@@ -204,7 +205,7 @@ ggplot2::ggplot(
   geom_point(size = 2.5) +
   xlab("Sensitivity") + 
   ylab("Specificity") +
-  facet_wrap(~ name, nrow = 2) +
+  facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
     shape = "Neurotypical only"
@@ -305,7 +306,7 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") +
   ylab("Specificity (%)") +
   ggrepel::geom_text_repel(
-    aes(label = test_description), max.overlaps = 10, size = 3) +
+    aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
     shape = "Neurotypical only"
   ) +
@@ -775,6 +776,15 @@ self_report peer_rating neuropsycho_tests neuroimaging clinician_interview combi
 inv_logit <- function(x) { exp(x) / (1 + exp(x)) }
 logit <- function(x) { log(x / (1 - x)) }
 
+get_i2_un <- function(model) {
+  W <- diag(1/model$vi)
+  X <- model.matrix(model)
+  P <- W - W %*% X %*% solve(t(X) %*% W %*% X) %*% t(X) %*% W
+  v_bar <- (model$k - model$p) / sum(diag(P))
+  
+  i2 <- (model$tau2 / (sum(model$tau2) + v_bar)) * 100
+  return(round(i2, 2))
+}
 
 plot_diagnostic_meta <- 
   function(
@@ -817,6 +827,10 @@ plot_diagnostic_meta <-
     res <- metafor::rma.mv(yi, vi, mods = ~ outcome - 1, random = ~ outcome | study,
                            struct = "UN", data = dat_long)
     
+    i2_results <- get_i2_un(res)
+    cat(glue::glue("**I-squared for Specificity:** {i2_results[1]}%\n\n"))    
+    cat(glue::glue("**I-squared for Specificity:** {i2_results[2]}%\n\n"))    
+    
     # 3. Setup Plotting Layout
     all_studies <- dat_long %>%
       distinct(study) %>%
@@ -848,8 +862,9 @@ plot_diagnostic_meta <-
       ylim = c(-2, k_total + 3), 
       alim = c(0, 1),
       steps = 5,
+      xlab = "Sensitivity",
       rows = all_studies$row_num, header = "Study", 
-      main = paste("Sensitivity"), 
+      main = paste(""), 
       refline = NA, cex = cex)
     
     text(-0.5, k_total + 2, "Instrument", pos = 4, cex = cex, font = 2) 
@@ -868,13 +883,17 @@ plot_diagnostic_meta <-
     metafor::forest(
       dat_spec_plot$yi, 
       vi = dat_spec_plot$vi, 
-      slab = NA, transf = transf.ilogit, 
+      slab = NA, 
+      transf = transf.ilogit, 
+      xlab = "Specificity",
       xlim = c(-0.1, 2), 
       ylim = c(-2, k_total + 3), 
       rows = all_studies$row_num,
       alim = c(0, 1),
       steps = 5,
-      header = "", main = "Specificity", refline = NA, cex = cex)
+      header = "", main = "", 
+      refline = NA, 
+      cex = cex)
     
     addpoly(
       res$beta[2], 
@@ -971,7 +990,7 @@ plot_diagnostic_meta <-
       geom_point(data = study_data, aes(x = fpr, y = sens, size = weight), 
              alpha = 0.5) 
     
-    print(plot2)
+    #print(plot2) - don't print
   }
 
 
@@ -988,6 +1007,7 @@ categories <- c("self_report", "peer_rating", "neuropsycho_tests", "neuroimaging
 
 #| fig-width: 14
 #| fig-height: 14
+#| results: asis
 #| 
 # Define the categories you want to loop through
 
