@@ -770,8 +770,8 @@ self_report peer_rating neuropsycho_tests neuroimaging clinician_interview combi
 ```{r}
 
 
-#| fig-width: 14
-#| fig-height: 14
+##| fig-width: 14
+##| fig-height: 14
 
 inv_logit <- function(x) { exp(x) / (1 + exp(x)) }
 logit <- function(x) { log(x / (1 - x)) }
@@ -1002,8 +1002,8 @@ categories <- c("self_report", "peer_rating", "neuropsycho_tests", "neuroimaging
 ```
 
 ```{r}
-#| fig-width: 14
-#| fig-height: 14
+##| fig-width: 14
+##| fig-height: 14
 #| results: asis
 #| 
 # Define the categories you want to loop through
