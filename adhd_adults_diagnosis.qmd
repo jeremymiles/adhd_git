@@ -10,7 +10,7 @@ editor: visual
 
 ```{r}
 
-library(dmetar)
+# library(dmetar)
 library(dplyr)
 library(ellipse)
 library(ggplot2)
