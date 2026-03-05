@@ -282,11 +282,11 @@ plot_data %>%
 # 1. Define your colors in a named vector
 # You must assign a color to every category, or the others will disappear/turn grey.
 my_colors <- c(
-  "ASRS"  = "red",    # Replace with your preferred color
-  "CAARS" = "blue",   # Replace with your preferred color
-  "BAARS" = "darkgreen",  # Replace with your preferred color
-  "WURS" = "brown4",  # Replace with your preferred color
-  "Other" = "black"   # The specific requirement
+  "ASRS"  = "#D55E00",    # Replace with your preferred color
+  "CAARS" = "#0072B2",   # Replace with your preferred color
+  "BAARS" = "#009E73",  # Replace with your preferred color
+  "WURS"  = "#CC79A7",  # Replace with your preferred color
+  "Other" = "#000000"   # The specific requirement
 )
 
 # 2. Plot
@@ -370,12 +370,12 @@ plot_data <- plot_data %>%
   )
 
 my_colors <- c(
-  "AQT"  = "red",    # Replace with your preferred color
-  "C-CPT" = "blue",   # Replace with your preferred color
-  "MOXO" = "darkgreen",  # Replace with your preferred color
-  "QbTest" = "chocolate4",
-  "Go-NoGo" = "yellow",
-  "Other" = "black"   # The specific requirement
+  "AQT"     = "#D55E00",    # Replace with your preferred color
+  "C-CPT"   = "#0072B2",   # Replace with your preferred color
+  "MOXO"    = "#009E73",  # Replace with your preferred color
+  "QbTest"  = "#CC79A7",
+  "Go-NoGo" = "#E69F00",
+  "Other"   = "#000000"   # The specific requirement
 )
 
 plot_data %>% ggplot2::ggplot(
