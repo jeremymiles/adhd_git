@@ -893,16 +893,47 @@ plot_diagnostic_meta <-
     
     cat("<h3>Neurotypical</h3><p>")
     
+    
+    
     dat_long$neurotypical_mod <-
       dat_long$Neurotypical == "Neurotypical"
-    res_neurotypical <- metafor::rma.mv(
-      yi, vi, mods = ~ neurotypical_mod * outcome - 1, 
-      random = ~ outcome | study,
-      struct = "UN", data = dat_long
-    )
-    
-    cat("Neurotypical analysis coming.<p>")
-    #print(res_neurotypical)
+    if (length(unique(dat_long$neurotypical_mod)) == 1) {
+      cat("No variation in neurotypical - comparison not progressing.")
+    } else {
+      res_neurotypical <- metafor::rma.mv(
+        yi, vi, 
+        mods = ~ neurotypical_mod:outcome - 1,
+        random = ~ outcome | study,
+        struct = "UN", data = dat_long
+      )
+          
+      cat("Neurotypical analysis coming.<p>")
+      #print(res_neurotypical)
+      
+
+      
+      results_tab <- as.data.frame(summary(res_neurotypical)$beta)
+      results_tab$ci.lb <- res_neurotypical$ci.lb
+      results_tab$ci.ub <- res_neurotypical$ci.ub
+        
+      # Apply the inverse logit: exp(x) / (1 + exp(x))
+      results_transformed <- results_tab %>%
+        mutate(
+          Estimate_Prob = plogis(V1),
+          Lower_CI = plogis(ci.lb),
+          Upper_CI = plogis(ci.ub)
+        ) %>%
+        select(Estimate_Prob, Lower_CI, Upper_CI)
+      
+      
+      print(knitr::kable(results_transformed, digits = 3))
+      
+      cat("Test of difference in sensitivity for neurotypical vs not<p>")
+      anova(res_neurotypical, L = c(-1, 1, 0, 0))
+      cat("Test of difference in specificity for neurotypical vs not<p>")
+      anova(res_neurotypical, L = c(0, 0, -1, 1))
+      
+    }
     
     # 3. Setup Plotting Layout
     all_studies <- dat_long %>%
