@@ -929,9 +929,9 @@ plot_diagnostic_meta <-
       print(knitr::kable(results_transformed, digits = 3))
       
       cat("Test of difference in sensitivity for neurotypical vs not<p>")
-      anova(res_neurotypical, L = c(-1, 1, 0, 0))
+      anova(res_neurotypical, L = c(-1, 1, 0, 0)) %>% print()
       cat("Test of difference in specificity for neurotypical vs not<p>")
-      anova(res_neurotypical, L = c(0, 0, -1, 1))
+      anova(res_neurotypical, L = c(0, 0, -1, 1)) %>% print()
       
     }
     
