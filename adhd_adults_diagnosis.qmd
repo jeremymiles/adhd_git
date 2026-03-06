@@ -4,12 +4,16 @@ format:
   html:
     embed-resources: true
 editor: visual
+execute:
+  echo: false
+  warning: false
+  message: false
 ---
 
 ## ADHD Adults Diagnosis
 
 ```{r}
-
+options(tidyverse.quiet = TRUE)
 # library(dmetar)
 library(dplyr)
 library(ellipse)
@@ -805,7 +809,8 @@ plot_diagnostic_meta <-
       add = 0.5
     )
     dat_sens$outcome <- "sens"
-    dat_sens$calculated = inv_logit(dat_sens$yi)
+    dat_sens$calculated = dat_sens[[true_pos]] / 
+      (dat_sens[[true_pos]] + dat_sens[[false_neg]])
     
     # Calculate Specificity
     dat_spec <- metafor::escalc(
@@ -816,7 +821,8 @@ plot_diagnostic_meta <-
       add = 0.5
     )
     dat_spec$outcome <- "spec"
-    dat_spec$calculated = inv_logit(dat_spec$yi)
+    dat_spec$calculated = dat_spec[[true_neg]] / 
+      (dat_spec[[true_neg]] + dat_sens[[false_pos]])
     
     # Combine and filter for studies that actually have data for this type
     dat_long <- rbind(dat_sens, dat_spec)
@@ -824,9 +830,13 @@ plot_diagnostic_meta <-
       filter(!is.na(yi)) %>%
       arrange(desc(study))
     
-    if(nrow(dat_long) == 0) return(message(paste("No data for", diag_type_name)))
+    if(nrow(dat_long) == 0) {
+      return(message(paste("No data for", diag_type_name, "<p>")))
+    } else {
+      cat(glue::glue("N Studies = {nrow(dat_long) / 2} <p>"))
+    }
     
-    dat_long %>%
+    dat_sens_spec <- dat_long %>%
       dplyr::select(
         ID, outcome, calculated) %>%
       tidyr::pivot_wider(
@@ -838,26 +848,70 @@ plot_diagnostic_meta <-
         data %>% select(ID, sens_reported, spec_reported)
       ) %>%
       dplyr::mutate(
-        sens = round(sens * 100),
-        spec = round(spec * 100)
+        sens_calculated = round(sens * 100),
+        spec_calculated = round(spec * 100)
       ) %>%
-      dplyr::select(ID, starts_with("sens"), starts_with("spec")) %>%
-      knitr::kable() %>%
-      print()
+      dplyr::select(
+        ID, 
+        starts_with("sensitivity"), 
+        sens_calculated, 
+        starts_with("specificity"), 
+        spec_calculated
+      ) 
+    
+    # Find studies where calculated value of sens and spec differs from their calculation
+    dat_sens_spec_discrepant <- dat_sens_spec %>%
+      dplyr::filter(
+        abs(round(sens_calculated) - !!sym(sens_reported) ) > 1 |
+          abs(round(spec_calculated) - !!sym(spec_reported) ) > 1 
+      )
+    
+    cat("<h3>Discrepant Studies</h3><br>")
+    
+    cat("Discrepant studies are those where the value for 
+        sensitivity and specificity that we calculate are > 1% different
+        than the value that is in the paper.")
+    if (nrow(dat_sens_spec_discrepant) == 0) {
+      cat("No discrepant studies. <p>")
+    } else {
+      knitr::kable(dat_sens_spec_discrepant) %>% print()
+    }
+    
     
     # 2. Run Meta-Analysis Model
-    res <- metafor::rma.mv(yi, vi, mods = ~ outcome - 1, random = ~ outcome | study,
+    res <- metafor::rma.mv(yi, vi, mods = ~ outcome - 1, 
+                           random = ~ outcome | study,
                            struct = "UN", data = dat_long)
     
     i2_results <- get_i2_un(res)
-    cat(glue::glue("**I-squared for Specificity:** {i2_results[1]}%\n\n"))    
-    cat(glue::glue("**I-squared for Specificity:** {i2_results[2]}%\n\n"))    
+    cat(glue::glue(
+      "**I-squared for Specificity:** {i2_results[1]}%<p>")
+    )    
+    cat(glue::glue(
+      "**I-squared for Specificity:** {i2_results[2]}%<p>")
+    )    
+    
+    cat("<h3>Neurotypical</h3><p>")
+    
+    dat_long$neurotypical_mod <-
+      dat_long$Neurotypical == "Neurotypical"
+    res_neurotypical <- metafor::rma.mv(
+      yi, vi, mods = ~ neurotypical_mod * outcome - 1, 
+      random = ~ outcome | study,
+      struct = "UN", data = dat_long
+    )
+    
+    cat("Neurotypical analysis coming.<p>")
+    #print(res_neurotypical)
     
     # 3. Setup Plotting Layout
     all_studies <- dat_long %>%
       distinct(study) %>%
       # Add the instrument label early so we can sort by it
-      mutate(instrument_label = data[[instrument_col]][match(study, data$study)]) %>%
+      mutate(
+        instrument_label = 
+          data[[instrument_col]][match(study, data$study)]
+      ) %>%
       # SORTING: Instrument (A-Z) and then Study (A-Z)
       # We arrange in ASCENDING order here...
       arrange(instrument_label, study) %>%
@@ -930,7 +984,7 @@ plot_diagnostic_meta <-
     ### Now do pooled ROC
     
     inv_logit <- function(x) { exp(x) / (1 + exp(x)) }
-
+    
     # Create the study_data data frame for ggplot
     study_data <- data.frame(
       # 1. Back-transform logit specificity to raw specificity, then calculate FPR
@@ -992,7 +1046,7 @@ plot_diagnostic_meta <-
       fpr = inv_logit(ellipse_logit[, 1]),
       sens = inv_logit(ellipse_logit[, 2])
     )
-
+    
     
     
     plot2 <- 
@@ -1011,7 +1065,7 @@ plot_diagnostic_meta <-
       ) +
       geom_path(data = ellipse_data, aes(x = fpr, y = sens), linewidth = 0.8) +
       geom_point(data = study_data, aes(x = fpr, y = sens, size = weight), 
-             alpha = 0.5) 
+                 alpha = 0.5) 
     
     #print(plot2) - don't print
   }
@@ -1038,7 +1092,7 @@ for (category in categories) {
   inst <- paste0("test_description_", category)
   sens_reported <- paste0("sensitivity_", category)
   spec_reported <- paste0("specificity_", category)
-
+  
   
   # Generate the plot
   plot_diagnostic_meta(
@@ -1051,7 +1105,7 @@ for (category in categories) {
     instrument_col = inst,
     sens_reported,
     spec_reported
-    )
+  )
 }
 
 ```
