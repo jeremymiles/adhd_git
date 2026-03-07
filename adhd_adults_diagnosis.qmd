@@ -14,7 +14,7 @@ execute:
 
 ```{r}
 options(tidyverse.quiet = TRUE)
-# library(dmetar)
+library(broom)
 library(dplyr)
 library(ellipse)
 library(ggplot2)
@@ -857,7 +857,21 @@ plot_diagnostic_meta <-
         sens_calculated, 
         starts_with("specificity"), 
         spec_calculated
-      ) 
+      ) %>%
+      # Get TP, TN, FP, FN from data
+      dplyr::inner_join(
+        data %>% dplyr::select(
+          ID,
+          !!sym(true_pos),
+          !!sym(false_pos),
+          !!sym(true_neg),
+          !!sym(false_neg),
+        )
+      ) %>%
+      dplyr::mutate(
+        total_positive = !!sym(true_pos) + !!sym(false_pos),
+        total_positive = !!sym(true_neg) + !!sym(false_neg),
+      )
     
     # Find studies where calculated value of sens and spec differs from their calculation
     dat_sens_spec_discrepant <- dat_sens_spec %>%
@@ -879,14 +893,19 @@ plot_diagnostic_meta <-
     
     
     # 2. Run Meta-Analysis Model
-    res <- metafor::rma.mv(yi, vi, mods = ~ outcome - 1, 
+    res <- metafor::rma.mv(
+      yi, vi, mods = ~ outcome - 1, 
                            random = ~ outcome | study,
-                           struct = "UN", data = dat_long)
+                           struct = "UN", data = dat_long
+                           )
+    output_text <- capture.output(print(res))
+    cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
     
     i2_results <- get_i2_un(res)
     cat(glue::glue(
-      "**I-squared for Specificity:** {i2_results[1]}%<p>")
+      "**I-squared for Sensitivity:** {i2_results[1]}%<p>")
     )    
+    
     cat(glue::glue(
       "**I-squared for Specificity:** {i2_results[2]}%<p>")
     )    
@@ -906,11 +925,11 @@ plot_diagnostic_meta <-
         random = ~ outcome | study,
         struct = "UN", data = dat_long
       )
-          
-      cat("Neurotypical analysis coming.<p>")
-      #print(res_neurotypical)
-      
 
+      
+      
+      output_text <- capture.output(print(res_neurotypical))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
       
       results_tab <- as.data.frame(summary(res_neurotypical)$beta)
       results_tab$ci.lb <- res_neurotypical$ci.lb
@@ -929,11 +948,15 @@ plot_diagnostic_meta <-
       print(knitr::kable(results_transformed, digits = 3))
       
       cat("Test of difference in sensitivity for neurotypical vs not<p>")
-      anova(res_neurotypical, L = c(-1, 1, 0, 0)) %>% print()
+      output_text <- 
+        capture.output(print(anova(res_neurotypical, L = c(-1, 1, 0, 0))))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+ 
       cat("Test of difference in specificity for neurotypical vs not<p>")
-      anova(res_neurotypical, L = c(0, 0, -1, 1)) %>% print()
-      
-    }
+      output_text <- 
+        capture.output(print(anova(res_neurotypical, L = c(0, 0, -1, 1))))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+     }
     
     # 3. Setup Plotting Layout
     all_studies <- dat_long %>%
