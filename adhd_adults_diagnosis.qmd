@@ -4,13 +4,17 @@ format:
   html:
     embed-resources: true
 editor: visual
+execute:
+  echo: false
+  warning: false
+  message: false
 ---
 
 ## ADHD Adults Diagnosis
 
 ```{r}
-
-library(dmetar)
+options(tidyverse.quiet = TRUE)
+library(broom)
 library(dplyr)
 library(ellipse)
 library(ggplot2)
@@ -282,11 +286,11 @@ plot_data %>%
 # 1. Define your colors in a named vector
 # You must assign a color to every category, or the others will disappear/turn grey.
 my_colors <- c(
-  "ASRS"  = "red",    # Replace with your preferred color
-  "CAARS" = "blue",   # Replace with your preferred color
-  "BAARS" = "darkgreen",  # Replace with your preferred color
-  "WURS" = "brown4",  # Replace with your preferred color
-  "Other" = "black"   # The specific requirement
+  "ASRS"  = "#D55E00",    # Replace with your preferred color
+  "CAARS" = "#0072B2",   # Replace with your preferred color
+  "BAARS" = "#009E73",  # Replace with your preferred color
+  "WURS"  = "#CC79A7",  # Replace with your preferred color
+  "Other" = "#000000"   # The specific requirement
 )
 
 # 2. Plot
@@ -336,7 +340,8 @@ d_test_description_np %>%
   dplyr::group_by(test_description) %>%
   dplyr::summarise(n = dplyr::n()) %>%
   dplyr::arrange(desc(n)) %>%
-  knitr::kable()
+  knitr::kable() %>% 
+  print()
 
 rm(plot_data)
 
@@ -369,12 +374,12 @@ plot_data <- plot_data %>%
   )
 
 my_colors <- c(
-  "AQT"  = "red",    # Replace with your preferred color
-  "C-CPT" = "blue",   # Replace with your preferred color
-  "MOXO" = "darkgreen",  # Replace with your preferred color
-  "QbTest" = "chocolate4",
-  "Go-NoGo" = "yellow",
-  "Other" = "black"   # The specific requirement
+  "AQT"     = "#D55E00",    # Replace with your preferred color
+  "C-CPT"   = "#0072B2",   # Replace with your preferred color
+  "MOXO"    = "#009E73",  # Replace with your preferred color
+  "QbTest"  = "#CC79A7",
+  "Go-NoGo" = "#E69F00",
+  "Other"   = "#000000"   # The specific requirement
 )
 
 plot_data %>% ggplot2::ggplot(
@@ -768,8 +773,6 @@ Need to loop through:
 self_report peer_rating neuropsycho_tests neuroimaging clinician_interview combination biomarker EEG
 
 ```{r}
-
-
 ##| fig-width: 14
 ##| fig-height: 14
 
@@ -791,9 +794,11 @@ plot_diagnostic_meta <-
     data, diag_type_name, 
     true_pos, false_neg, 
     true_neg, false_pos,
-    instrument_col
+    instrument_col,
+    sens_reported,
+    spec_reported
   ) {
-    cat(glue::glue("<h2>{diag_type_name}</h2>"))
+    cat(glue::glue("<h2>{diag_type_name}</h2><br>"))
     data[[instrument_col]] <- stringr::word(data[[instrument_col]])
     
     dat_sens <- metafor::escalc(
@@ -804,6 +809,8 @@ plot_diagnostic_meta <-
       add = 0.5
     )
     dat_sens$outcome <- "sens"
+    dat_sens$calculated = dat_sens[[true_pos]] / 
+      (dat_sens[[true_pos]] + dat_sens[[false_neg]])
     
     # Calculate Specificity
     dat_spec <- metafor::escalc(
@@ -814,6 +821,8 @@ plot_diagnostic_meta <-
       add = 0.5
     )
     dat_spec$outcome <- "spec"
+    dat_spec$calculated = dat_spec[[true_neg]] / 
+      (dat_spec[[true_neg]] + dat_sens[[false_pos]])
     
     # Combine and filter for studies that actually have data for this type
     dat_long <- rbind(dat_sens, dat_spec)
@@ -821,21 +830,142 @@ plot_diagnostic_meta <-
       filter(!is.na(yi)) %>%
       arrange(desc(study))
     
-    if(nrow(dat_long) == 0) return(message(paste("No data for", diag_type_name)))
+    if(nrow(dat_long) == 0) {
+      return(message(paste("No data for", diag_type_name, "<p>")))
+    } else {
+      cat(glue::glue("N Studies = {nrow(dat_long) / 2} <p>"))
+    }
+    
+    dat_sens_spec <- dat_long %>%
+      dplyr::select(
+        ID, outcome, calculated) %>%
+      tidyr::pivot_wider(
+        id_cols = "ID",
+        names_from = outcome,
+        values_from = calculated
+      ) %>%
+      dplyr::left_join(
+        data %>% select(ID, sens_reported, spec_reported)
+      ) %>%
+      dplyr::mutate(
+        sens_calculated = round(sens * 100),
+        spec_calculated = round(spec * 100)
+      ) %>%
+      dplyr::select(
+        ID, 
+        starts_with("sensitivity"), 
+        sens_calculated, 
+        starts_with("specificity"), 
+        spec_calculated
+      ) %>%
+      # Get TP, TN, FP, FN from data
+      dplyr::inner_join(
+        data %>% dplyr::select(
+          ID,
+          !!sym(true_pos),
+          !!sym(false_pos),
+          !!sym(true_neg),
+          !!sym(false_neg),
+        )
+      ) %>%
+      dplyr::mutate(
+        total_positive = !!sym(true_pos) + !!sym(false_pos),
+        total_positive = !!sym(true_neg) + !!sym(false_neg),
+      )
+    
+    # Find studies where calculated value of sens and spec differs from their calculation
+    dat_sens_spec_discrepant <- dat_sens_spec %>%
+      dplyr::filter(
+        abs(round(sens_calculated) - !!sym(sens_reported) ) > 1 |
+          abs(round(spec_calculated) - !!sym(spec_reported) ) > 1 
+      )
+    
+    cat("<h3>Discrepant Studies</h3><br>")
+    
+    cat("Discrepant studies are those where the value for 
+        sensitivity and specificity that we calculate are > 1% different
+        than the value that is in the paper.")
+    if (nrow(dat_sens_spec_discrepant) == 0) {
+      cat("No discrepant studies. <p>")
+    } else {
+      knitr::kable(dat_sens_spec_discrepant) %>% print()
+    }
+    
     
     # 2. Run Meta-Analysis Model
-    res <- metafor::rma.mv(yi, vi, mods = ~ outcome - 1, random = ~ outcome | study,
-                           struct = "UN", data = dat_long)
+    res <- metafor::rma.mv(
+      yi, vi, mods = ~ outcome - 1, 
+                           random = ~ outcome | study,
+                           struct = "UN", data = dat_long
+                           )
+    output_text <- capture.output(print(res))
+    cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
     
     i2_results <- get_i2_un(res)
-    cat(glue::glue("**I-squared for Specificity:** {i2_results[1]}%\n\n"))    
-    cat(glue::glue("**I-squared for Specificity:** {i2_results[2]}%\n\n"))    
+    cat(glue::glue(
+      "**I-squared for Sensitivity:** {i2_results[1]}%<p>")
+    )    
+    
+    cat(glue::glue(
+      "**I-squared for Specificity:** {i2_results[2]}%<p>")
+    )    
+    
+    cat("<h3>Neurotypical</h3><p>")
+    
+    
+    
+    dat_long$neurotypical_mod <-
+      dat_long$Neurotypical == "Neurotypical"
+    if (length(unique(dat_long$neurotypical_mod)) == 1) {
+      cat("No variation in neurotypical - comparison not progressing.")
+    } else {
+      res_neurotypical <- metafor::rma.mv(
+        yi, vi, 
+        mods = ~ neurotypical_mod:outcome - 1,
+        random = ~ outcome | study,
+        struct = "UN", data = dat_long
+      )
+
+      
+      
+      output_text <- capture.output(print(res_neurotypical))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+      
+      results_tab <- as.data.frame(summary(res_neurotypical)$beta)
+      results_tab$ci.lb <- res_neurotypical$ci.lb
+      results_tab$ci.ub <- res_neurotypical$ci.ub
+        
+      # Apply the inverse logit: exp(x) / (1 + exp(x))
+      results_transformed <- results_tab %>%
+        mutate(
+          Estimate_Prob = plogis(V1),
+          Lower_CI = plogis(ci.lb),
+          Upper_CI = plogis(ci.ub)
+        ) %>%
+        select(Estimate_Prob, Lower_CI, Upper_CI)
+      
+      
+      print(knitr::kable(results_transformed, digits = 3))
+      
+      cat("Test of difference in sensitivity for neurotypical vs not<p>")
+      output_text <- 
+        capture.output(print(anova(res_neurotypical, L = c(-1, 1, 0, 0))))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+ 
+      cat("Test of difference in specificity for neurotypical vs not<p>")
+      output_text <- 
+        capture.output(print(anova(res_neurotypical, L = c(0, 0, -1, 1))))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+     }
     
     # 3. Setup Plotting Layout
     all_studies <- dat_long %>%
       distinct(study) %>%
       # Add the instrument label early so we can sort by it
-      mutate(instrument_label = data[[instrument_col]][match(study, data$study)]) %>%
+      mutate(
+        instrument_label = 
+          data[[instrument_col]][match(study, data$study)]
+      ) %>%
       # SORTING: Instrument (A-Z) and then Study (A-Z)
       # We arrange in ASCENDING order here...
       arrange(instrument_label, study) %>%
@@ -872,7 +1002,8 @@ plot_diagnostic_meta <-
          pos = 4, cex = cex
     )
     addpoly(res$beta[1], sei = res$se[1],
-            row = -1, transf = transf.ilogit, mlab = "", col = "red", cex = cex
+            row = -1, transf = transf.ilogit, mlab = "", 
+            col = "red", cex = cex
     )
     
     # 5. Plot Specificity
@@ -907,7 +1038,7 @@ plot_diagnostic_meta <-
     ### Now do pooled ROC
     
     inv_logit <- function(x) { exp(x) / (1 + exp(x)) }
-
+    
     # Create the study_data data frame for ggplot
     study_data <- data.frame(
       # 1. Back-transform logit specificity to raw specificity, then calculate FPR
@@ -969,7 +1100,7 @@ plot_diagnostic_meta <-
       fpr = inv_logit(ellipse_logit[, 1]),
       sens = inv_logit(ellipse_logit[, 2])
     )
-
+    
     
     
     plot2 <- 
@@ -988,7 +1119,7 @@ plot_diagnostic_meta <-
       ) +
       geom_path(data = ellipse_data, aes(x = fpr, y = sens), linewidth = 0.8) +
       geom_point(data = study_data, aes(x = fpr, y = sens, size = weight), 
-             alpha = 0.5) 
+                 alpha = 0.5) 
     
     #print(plot2) - don't print
   }
@@ -1016,6 +1147,9 @@ for (category in categories) {
   tn <- paste0("true_negative_", category)
   fp <- paste0("false_positive_", category)
   inst <- paste0("test_description_", category)
+  sens_reported <- paste0("sensitivity_", category)
+  spec_reported <- paste0("specificity_", category)
+  
   
   # Generate the plot
   plot_diagnostic_meta(
@@ -1025,6 +1159,10 @@ for (category in categories) {
     false_neg = fn, 
     true_neg = tn, 
     false_pos = fp, 
-    instrument_col = inst)
+    instrument_col = inst,
+    sens_reported,
+    spec_reported
+  )
 }
+
 ```
