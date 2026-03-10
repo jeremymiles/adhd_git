@@ -23,14 +23,18 @@ list_res <- lapply(categories, function(category) {
   d <- dplyr::arrange(d, ID)
   d_sens <- d %>%
     dplyr::filter(!is.na(!!rlang::sym(glue::glue("sensitivity_", category))))
+  n_sens <- nrow(d_sens)
   ids_sens <- paste0(d_sens$ID, collapse = ", ")
+  
   d_spec <- d %>%
     dplyr::filter(!is.na(!!rlang::sym(glue::glue("specificity_", category))))
+  n_spec <- nrow(d_spec)
   ids_spec <- paste0(d_sens$ID, collapse = ", ")
  df <-    data.frame(
       category = c(category, category),
       measure = c("sensitivity", "specificity"),
-      ids = c(ids_sens, ids_spec)
+      ids = c(ids_sens, ids_spec),
+      n_studies = c(n_sens, n_spec)
     )
    return(df)
 })
