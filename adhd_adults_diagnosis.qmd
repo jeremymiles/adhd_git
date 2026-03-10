@@ -812,24 +812,26 @@ plot_diagnostic_meta <-
     # 3. Setup Plotting Layout
     all_studies <- dat_long %>%
       distinct(study) %>%
-      # Add the instrument label early so we can sort by it
-      mutate(
-        instrument_label = 
-          d[[instrument_col]][match(study, d$study)]
-      ) %>%
+      # Add the instrument label early so we can sort by it and Clinical
+      dplyr::inner_join(
+       d %>% dplyr::select(study, Clinical, !!rlang::sym(instrument_col)) 
+      ) %>% 
+      dplyr::mutate(
+        instrument_label = !!rlang::sym(instrument_col),
+        CL = ifelse(Clinical == "Clinical", "CL", "")
+      ) %>% 
       # SORTING: Instrument (A-Z) and then Study (A-Z)
       # We arrange in ASCENDING order here...
       arrange(instrument_label, study) %>%
       # ...then we assign row_num so that the first item gets the HIGHEST row 
       # (putting it at the top of the plot)
-      mutate(row_num = rev(row_number()))
+      mutate(row_num = rev(row_number())) 
+
     
     k_total <- nrow(all_studies)
     cex <- 0.6
     
     layout(matrix(c(1, 2), nrow = 1), widths = c(1.8, 1))
-    
-    
     # 4. Plot Sensitivity
     par(mar = c(5, 4, 3, 1))
     dat_sens_plot <- 
@@ -839,7 +841,7 @@ plot_diagnostic_meta <-
     metafor::forest(
       dat_sens_plot$yi, vi = dat_sens_plot$vi, slab = dat_sens_plot$study,
       transf = transf.ilogit,
-      xlim = c(-1.2, 2.5), 
+      xlim = c(-1.7, 2), 
       ylim = c(-2, k_total + 3), 
       alim = c(0, 1),
       steps = 5,
@@ -848,8 +850,12 @@ plot_diagnostic_meta <-
       main = paste(""), 
       refline = NA, cex = cex)
     
-    text(-0.5, k_total + 2, "Tool", pos = 4, cex = cex, font = 2) 
-    text(-0.5, all_studies$row_num, all_studies$instrument_label, 
+    text(-1, k_total + 2, "Tool", pos = 4, cex = cex, font = 2) 
+    text(-1, all_studies$row_num, all_studies$instrument_label, 
+         pos = 4, cex = cex
+    )
+    text(-0.5, k_total + 2, "CL", pos = 4, cex = cex, font = 2) 
+    text(-0.5, all_studies$row_num, all_studies$CL, 
          pos = 4, cex = cex
     )
     addpoly(res$beta[1], sei = res$se[1],
