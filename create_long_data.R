@@ -28,7 +28,7 @@ CreateLongData <- function(
   # Combine and filter for studies that actually have data for this type
   dat_long <- rbind(dat_sens, dat_spec)
   dat_long <- dat_long %>% 
-    #filter(!is.na(yi)) %>% ##############################
+    filter(!is.na(yi)) %>% ##############################
     arrange(desc(study))
   
   if(nrow(dat_long) == 0) {
