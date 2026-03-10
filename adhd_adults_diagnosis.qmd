@@ -943,7 +943,7 @@ plot_diagnostic_meta <-
         capture.output(print(anova(res_neurotypical, L = c(0, 0, -1, 1))))
       cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
      }
-    
+    rm(res_neurotypical)
     ########## End neurotypical only
     
     ########## co-N/A vs (co-Anxiety, co-Autism, co-Depression, co-ODD, co-Other, co-SUD)
@@ -982,9 +982,27 @@ plot_diagnostic_meta <-
         random = ~ outcome | study,
         struct = "UN", data = d_comorbids
       )
+    output_text <- capture.output(print(res_comorbidity))
+    cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+    cat("Test of difference in sensitivity for comorbidity vs not<p>")
     
-          
-          
+    output_text <- 
+      output_text <- tryCatch({
+        capture.output(print(anova(res_comorbidity, L = c(-1, 1, 0, 0))))
+      }, error = function(e) {
+        return(NA)
+      })
+    cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+    
+    cat("Test of difference in specificity for comorbidity vs not<p>")
+    output_text <- 
+      output_text <- tryCatch({
+        capture.output(print(anova(res_comorbidity, L = c(0, 0, -1, 1))))
+      }, error = function(e) {
+        return(NA)
+      })
+    cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")     
+    
 
     
     
