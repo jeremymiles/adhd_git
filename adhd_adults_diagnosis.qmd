@@ -15,10 +15,12 @@ execute:
 ```{r}
 
 source("setup.R")
+source("create_long_data.R")
+
 
 ```
 
-You can add options to executable code like this
+
 
 ```{r}
 #|fig-height: 12
@@ -535,10 +537,10 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
 read_adhd_data <- function(file_path) {
   
   # Read the CSV file
-  data <- read.csv(file_path)
+  d <- read.csv(file_path)
   
   # Select only the required columns
-  clean_data <- data %>%
+  clean_data <- d %>%
     select(n_ADHD, 
            sensitivity_self_report, 
            specificity_self_report,
@@ -555,9 +557,9 @@ accuracy <- read_adhd_data(data_location)
 head(accuracy)
 
 
-calculate_adhd_stats <- function(data) {
+calculate_adhd_stats <- function(d) {
   
-  processed_data <- data %>%
+  processed_data <- d %>%
     mutate(
       # 1. Calculate Prevalence (P / Total)
       Prevalence = n_ADHD / size,
@@ -766,7 +768,7 @@ get_i2_un <- function(model) {
 
 plot_diagnostic_meta <- 
   function(
-    data, diag_type_name, 
+    d, diag_type_name, 
     true_pos, false_neg, 
     true_neg, false_pos,
     instrument_col,
@@ -774,97 +776,19 @@ plot_diagnostic_meta <-
     spec_reported
   ) {
     cat(glue::glue("<h2>{diag_type_name}</h2><br>"))
-    data[[instrument_col]] <- stringr::word(data[[instrument_col]])
+    d[[instrument_col]] <- stringr::word(d[[instrument_col]])
     
-    dat_sens <- metafor::escalc(
-      measure = "PLO", 
-      xi = data[[true_pos]],                       # Access the column via name
-      ni = (data[[true_pos]] + data[[false_neg]]), # Calculate the denominator
-      data = data, 
-      add = 0.5
-    )
-    dat_sens$outcome <- "sens"
-    dat_sens$calculated = dat_sens[[true_pos]] / 
-      (dat_sens[[true_pos]] + dat_sens[[false_neg]])
-    
-    # Calculate Specificity
-    dat_spec <- metafor::escalc(
-      measure = "PLO", 
-      xi = data[[true_neg]], 
-      ni = (data[[true_neg]] + data[[false_pos]]), 
-      data = data, 
-      add = 0.5
-    )
-    dat_spec$outcome <- "spec"
-    dat_spec$calculated = dat_spec[[true_neg]] / 
-      (dat_spec[[true_neg]] + dat_sens[[false_pos]])
-    
-    # Combine and filter for studies that actually have data for this type
-    dat_long <- rbind(dat_sens, dat_spec)
-    dat_long <- dat_long %>% 
-      filter(!is.na(yi)) %>%
-      arrange(desc(study))
-    
-    if(nrow(dat_long) == 0) {
-      return(message(paste("No data for", diag_type_name, "<p>")))
-    } else {
-      cat(glue::glue("N Studies = {nrow(dat_long) / 2} <p>"))
-    }
-    
-    dat_sens_spec <- dat_long %>%
-      dplyr::select(
-        ID, outcome, calculated) %>%
-      tidyr::pivot_wider(
-        id_cols = "ID",
-        names_from = outcome,
-        values_from = calculated
-      ) %>%
-      dplyr::left_join(
-        data %>% select(ID, sens_reported, spec_reported)
-      ) %>%
-      dplyr::mutate(
-        sens_calculated = round(sens * 100),
-        spec_calculated = round(spec * 100)
-      ) %>%
-      dplyr::select(
-        ID, 
-        starts_with("sensitivity"), 
-        sens_calculated, 
-        starts_with("specificity"), 
-        spec_calculated
-      ) %>%
-      # Get TP, TN, FP, FN from data
-      dplyr::inner_join(
-        data %>% dplyr::select(
-          ID,
-          !!sym(true_pos),
-          !!sym(false_pos),
-          !!sym(true_neg),
-          !!sym(false_neg),
-        )
-      ) %>%
-      dplyr::mutate(
-        total_positive = !!sym(true_pos) + !!sym(false_pos),
-        total_positive = !!sym(true_neg) + !!sym(false_neg),
-      )
-    
+   list_dat <- CreateLongData(d = d, true_pos, true_neg, false_pos, false_neg)
+   
+   dat_sens_spec <- list_dat$dat_sens_spec 
+   dat_long <- list_dat$dat_long
+   
     # Find studies where calculated value of sens and spec differs from their calculation
     dat_sens_spec_discrepant <- dat_sens_spec %>%
       dplyr::filter(
         abs(round(sens_calculated) - !!sym(sens_reported) ) > 1 |
           abs(round(spec_calculated) - !!sym(spec_reported) ) > 1 
       )
-    
-    cat("<h3>Discrepant Studies</h3><br>")
-    
-    cat("Discrepant studies are those where the value for 
-        sensitivity and specificity that we calculate are > 1% different
-        than the value that is in the paper.")
-    if (nrow(dat_sens_spec_discrepant) == 0) {
-      cat("No discrepant studies. <p>")
-    } else {
-      knitr::kable(dat_sens_spec_discrepant) %>% print()
-    }
     
     
     # 2. Run Meta-Analysis Model
@@ -885,59 +809,13 @@ plot_diagnostic_meta <-
       "**I-squared for Specificity:** {i2_results[2]}%<p>")
     )    
     
-    ############### Neurotypical only
-    cat("<h3>Neurotypical Only</h3><p>")
-    
-    dat_long$neurotypical_mod <-
-      dat_long$Neurotypical == "Neurotypical"
-    if (length(unique(dat_long$neurotypical_mod)) == 1) {
-      cat("No variation in neurotypical - comparison not progressing.")
-    } else {
-      res_neurotypical <- metafor::rma.mv(
-        yi, vi, 
-        mods = ~ neurotypical_mod:outcome - 1,
-        random = ~ outcome | study,
-        struct = "UN", data = dat_long
-      )
-
-    
-      output_text <- capture.output(print(res_neurotypical))
-      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
-      
-      results_tab <- as.data.frame(summary(res_neurotypical)$beta)
-      results_tab$ci.lb <- res_neurotypical$ci.lb
-      results_tab$ci.ub <- res_neurotypical$ci.ub
-        
-      # Apply the inverse logit: exp(x) / (1 + exp(x))
-      results_transformed <- results_tab %>%
-        mutate(
-          Estimate_Prob = plogis(V1),
-          Lower_CI = plogis(ci.lb),
-          Upper_CI = plogis(ci.ub)
-        ) %>%
-        select(Estimate_Prob, Lower_CI, Upper_CI)
-      
-      
-      print(knitr::kable(results_transformed, digits = 3))
-      
-      cat("Test of difference in sensitivity for neurotypical vs not<p>")
-      output_text <- 
-        capture.output(print(anova(res_neurotypical, L = c(-1, 1, 0, 0))))
-      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
- 
-      cat("Test of difference in specificity for neurotypical vs not<p>")
-      output_text <- 
-        capture.output(print(anova(res_neurotypical, L = c(0, 0, -1, 1))))
-      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
-     }
-    
     # 3. Setup Plotting Layout
     all_studies <- dat_long %>%
       distinct(study) %>%
       # Add the instrument label early so we can sort by it
       mutate(
         instrument_label = 
-          data[[instrument_col]][match(study, data$study)]
+          d[[instrument_col]][match(study, d$study)]
       ) %>%
       # SORTING: Instrument (A-Z) and then Study (A-Z)
       # We arrange in ASCENDING order here...
@@ -1006,10 +884,107 @@ plot_diagnostic_meta <-
       transf = transf.ilogit, 
       mlab = "", col = "red", cex = cex
     )
+    
+    cat("<h3>Discrepant Studies</h3><br>")
+    
+    cat("Discrepant studies are those where the value for 
+        sensitivity and specificity that we calculate are > 1% different
+        than the value that is in the paper.")
+    if (nrow(dat_sens_spec_discrepant) == 0) {
+      cat("No discrepant studies. <p>")
+    } else {
+      knitr::kable(dat_sens_spec_discrepant) %>% print()
+    }
+    
+    
+    
+    ############### Neurotypical only
+    cat("<h3>Neurotypical Only</h3><p>")
+    
+    dat_long$neurotypical_mod <-
+      dat_long$Neurotypical == "Neurotypical"
+    if (length(unique(dat_long$neurotypical_mod)) == 1) {
+      cat("No variation in neurotypical - comparison not progressing.")
+    } else {
+      res_neurotypical <- metafor::rma.mv(
+        yi, vi, 
+        mods = ~ neurotypical_mod:outcome - 1,
+        random = ~ outcome | study,
+        struct = "UN", data = dat_long
+      )
+
+    
+      output_text <- capture.output(print(res_neurotypical))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+      
+      results_tab <- as.data.frame(summary(res_neurotypical)$beta)
+      results_tab$ci.lb <- res_neurotypical$ci.lb
+      results_tab$ci.ub <- res_neurotypical$ci.ub
+        
+      # Apply the inverse logit: exp(x) / (1 + exp(x))
+      results_transformed <- results_tab %>%
+        mutate(
+          Estimate_Prob = plogis(V1),
+          Lower_CI = plogis(ci.lb),
+          Upper_CI = plogis(ci.ub)
+        ) %>%
+        select(Estimate_Prob, Lower_CI, Upper_CI)
+      
+      
+      print(knitr::kable(results_transformed, digits = 3))
+      
+      cat("Test of difference in sensitivity for neurotypical vs not<p>")
+      output_text <- 
+        capture.output(print(anova(res_neurotypical, L = c(-1, 1, 0, 0))))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+ 
+      cat("Test of difference in specificity for neurotypical vs not<p>")
+      output_text <- 
+        capture.output(print(anova(res_neurotypical, L = c(0, 0, -1, 1))))
+      cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+     }
+    
     ########## End neurotypical only
     
     ########## co-N/A vs (co-Anxiety, co-Autism, co-Depression, co-ODD, co-Other, co-SUD)
-
+    cat("<h3>Comorbiditises Only</h3><p>")
+    cat("Compare co-NA studies with any other comborbidity. <p>")
+    
+    dat_long <- CreateLongData(
+      d, true_pos, true_neg, false_pos, false_neg)[[1]]
+    
+    d_comorbids <- d %>%
+      dplyr::mutate(
+        coNA = co.N.A == "co-N/A",
+        has_comorbidity = (
+          co.Anxiety == "co-Anxiety" |
+          co.Autism == "co-Autism" |
+          co.Depression == "co-Depression" |
+          co.OCD == "co-OCD" |
+          co.Other == "co-Other" |
+          co.SUD ==  "co-SUD")
+        ) %>%
+      dplyr::filter(has_comorbidity | coNA) %>%
+      dplyr::mutate(
+        coNA = ifelse(is.na(coNA), FALSE, coNA),
+        has_comorbidity  = ifelse(is.na(has_comorbidity ), FALSE, has_comorbidity )
+      ) %>% 
+      # join to long data
+      dplyr::select(ID, has_comorbidity) %>%
+      dplyr::full_join(
+        dat_long, by = "ID"
+      ) %>%
+      dplyr::filter(!is.na(outcome))
+    
+      res_comorbidity <- metafor::rma.mv(
+        yi, vi, 
+        mods = ~ has_comorbidity:outcome - 1,
+        random = ~ outcome | study,
+        struct = "UN", data = d_comorbids
+      )
+    
+          
+          
 
     
     
@@ -1041,7 +1016,7 @@ for (category in categories) {
   
   # Generate the plot
   plot_diagnostic_meta(
-    data = d, 
+    d = d, 
     diag_type_name = category, 
     true_pos = tp, 
     false_neg = fn, 
