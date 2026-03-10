@@ -13,34 +13,9 @@ execute:
 ## ADHD Adults Diagnosis
 
 ```{r}
-options(tidyverse.quiet = TRUE)
-library(broom)
-library(dplyr)
-library(ellipse)
-library(ggplot2)
-library(ggrepel)
-library(kableExtra)
-library(metafor)
-library(stringr)
-library(tidyr)
-library(writexl)
 
-data_location <- "https://github.com/jeremymiles/adhd_git/raw/refs/heads/main/data/diagnosis_data.csv"
+source("setup.R")
 
-d <- read.csv(data_location)
-
-### TEMP - REMOVE
-#d <- d %>%
-#  dplyr::filter(ID != "Harrison, 2019{#351}") 
-
-capitalize_first <- function(s) {
-  if (is.na(s) || s == "") { #Handle NAs and empty strings
-    return(s)
-  }
-  first_letter <- str_sub(s, 1, 1)
-  rest_of_string <- str_sub(s, 2)
-  return(str_c(str_to_upper(first_letter), rest_of_string))
-}
 ```
 
 You can add options to executable code like this
@@ -910,9 +885,8 @@ plot_diagnostic_meta <-
       "**I-squared for Specificity:** {i2_results[2]}%<p>")
     )    
     
-    cat("<h3>Neurotypical</h3><p>")
-    
-    
+    ############### Neurotypical only
+    cat("<h3>Neurotypical Only</h3><p>")
     
     dat_long$neurotypical_mod <-
       dat_long$Neurotypical == "Neurotypical"
@@ -926,8 +900,7 @@ plot_diagnostic_meta <-
         struct = "UN", data = dat_long
       )
 
-      
-      
+    
       output_text <- capture.output(print(res_neurotypical))
       cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
       
@@ -1033,100 +1006,15 @@ plot_diagnostic_meta <-
       transf = transf.ilogit, 
       mlab = "", col = "red", cex = cex
     )
+    ########## End neurotypical only
+    
+    ########## co-N/A vs (co-Anxiety, co-Autism, co-Depression, co-ODD, co-Other, co-SUD)
+
+
     
     
-    ### Now do pooled ROC
-    
-    inv_logit <- function(x) { exp(x) / (1 + exp(x)) }
-    
-    # Create the study_data data frame for ggplot
-    study_data <- data.frame(
-      # 1. Back-transform logit specificity to raw specificity, then calculate FPR
-      fpr = 1 - inv_logit(dat_spec$yi),
-      
-      # 2. Back-transform logit sensitivity to raw sensitivity
-      sens = inv_logit(dat_sens$yi),
-      
-      # 3. Pull the strategy names from your original data frame
-      # (using the column you cleaned with stringr::word)
-      strategy = data[[instrument_col]]
-    )
-    study_data$weight <- 1 / dat_sens$vi
-    
-    # 2. Extract the Fixed Effects (Summary Points)
-    # (Assuming intercept 1 is logit_FPR and intercept 2 is logit_Se)
-    mu_fpr <- res$beta[1] 
-    mu_se  <- res$beta[2] 
-    
-    # 3. Extract Random Effects (Variances and Correlation)
-    # 'tau2' contains the variances, 'rho' is the correlation in rma.mv
-    sigma_fpr <- sqrt(res$tau2[1]) 
-    sigma_se  <- sqrt(res$tau2[2]) 
-    rho       <- res$rho
-    
-    # 4. Generate the Sequence of FPR values for the x-axis
-    # We use a sequence from 0.01 to 0.99 to avoid infinity in logit
-    fpr_seq <- seq(0.01, 0.99, length.out = 100)
-    logit_fpr_seq <- logit(fpr_seq)
-    
-    # 5. Calculate Expected logit(Sensitivity) using the SROC formula
-    logit_se_seq <- mu_se + rho * (sigma_se / sigma_fpr) * (logit_fpr_seq - mu_fpr)
-    
-    # 6. Back-transform to normal scale (0 to 1)
-    sens_seq <- inv_logit(logit_se_seq)
-    
-    # 7. Create the data frame for ggplot2
-    sroc_data <- data.frame(
-      fpr = fpr_seq,
-      sens = sens_seq
-    )
-    
-    
-    mu_fixed <- c(res$beta[1], res$beta[2]) 
-    V_fixed  <- vcov(res)[1:2, 1:2] # Variance-covariance matrix of the fixed effects
-    
-    # 3. Create the Summary Point Data Frame
-    summary_point <- data.frame(
-      fpr = inv_logit(mu_fixed[1]),
-      sens = inv_logit(mu_fixed[2])
-    )
-    
-    # 4. Generate 95% Confidence Ellipse in Logit Space
-    # The ellipse() function creates 100 coordinates outlining the region
-    ellipse_logit <- ellipse::ellipse(V_fixed, centre = mu_fixed, level = 0.95)
-    
-    # 5. Back-transform Ellipse Coordinates to Probability Space (0 to 1)
-    ellipse_data <- data.frame(
-      fpr = inv_logit(ellipse_logit[, 1]),
-      sens = inv_logit(ellipse_logit[, 2])
-    )
-    
-    
-    
-    plot2 <- 
-      ggplot(sroc_data, aes(x = fpr, y = sens)) +
-      geom_line(linewidth = 1.2) +
-      # Match the visual style of the published plot
-      scale_x_continuous(name = "False-Positive Rate", limits = c(0, 1), expand = c(0, 0)) +
-      scale_y_continuous(name = "Sensitivity", limits = c(00, 1.0), expand = c(0, 0)) +
-      theme_classic() +
-      theme(
-        legend.position = "bottom",
-        legend.title = element_blank(),
-        panel.grid.major = element_line(color = "grey95"),
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 12, face = "bold")
-      ) +
-      geom_path(data = ellipse_data, aes(x = fpr, y = sens), linewidth = 0.8) +
-      geom_point(data = study_data, aes(x = fpr, y = sens, size = weight), 
-                 alpha = 0.5) 
-    
-    #print(plot2) - don't print
   }
 
-
-categories <- c("self_report", "peer_rating", "neuropsycho_tests", "neuroimaging", 
-                "clinician_interview", "combination", "biomarker", "EEG")
 
 
 

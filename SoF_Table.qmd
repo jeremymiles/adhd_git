@@ -1,0 +1,44 @@
+---
+title: "ADHD Adults Diagnosis"
+format: 
+  html:
+    embed-resources: true
+editor: visual
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+## 
+
+```{r}
+source("setup.R")
+```
+
+```{r}
+
+
+list_res <- lapply(categories, function(category) {
+  d <- dplyr::arrange(d, ID)
+  d_sens <- d %>%
+    dplyr::filter(!is.na(!!rlang::sym(glue::glue("sensitivity_", category))))
+  ids_sens <- paste0(d_sens$ID, collapse = ", ")
+  d_spec <- d %>%
+    dplyr::filter(!is.na(!!rlang::sym(glue::glue("specificity_", category))))
+  ids_spec <- paste0(d_sens$ID, collapse = ", ")
+ df <-    data.frame(
+      category = c(category, category),
+      measure = c("sensitivity", "specificity"),
+      ids = c(ids_sens, ids_spec)
+    )
+   return(df)
+})
+  
+
+df_res <- dplyr::bind_rows(
+  list_res
+)
+
+knitr::kable(df_res)
+```
