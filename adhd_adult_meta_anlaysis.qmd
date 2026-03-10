@@ -309,7 +309,7 @@ plot_diagnostic_meta <-
     
     
     ############## Compare clinical with neurotypical
-    cat("<h3>Neurotypical vs Clinical</h3><p>")
+    cat("<h3>Neurotypical Only vs Clinical Only</h3><p>")
    
     list_dat <- CreateLongData(data = d, true_pos, true_neg, false_pos, false_neg)
    
@@ -350,10 +350,7 @@ plot_diagnostic_meta <-
       }, error = function(e) {
         return(NA)
       })
-    
   }
-
-
 
 
 ```
