@@ -285,14 +285,7 @@ plot_diagnostic_meta <-
     output_text <- capture.output(print(res_comorbidity))
     cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
     cat("Test of difference in sensitivity for comorbidity vs not<p>")
-    
-    output_text <- tryCatch({
-      capture.output(print(anova(res_comorbidity, L = c(-1, 1, 0, 0))))
-    }, error = function(e) {
-      return(NA)
-    })
-    cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
-    
+
     results_tab <- as.data.frame(summary(res_comorbidity)$beta)
     results_tab$ci.lb <- res_comorbidity$ci.lb
     results_tab$ci.ub <- res_comorbidity$ci.ub
@@ -307,10 +300,18 @@ plot_diagnostic_meta <-
       select(Estimate_Prob, Lower_CI, Upper_CI)
     
     print(knitr::kable(results_transformed, digits = 3))
+        
+    output_text <- tryCatch({
+      capture.output(print(anova(res_comorbidity, L = c(-1, 1, 0, 0))))
+    }, error = function(e) {
+      return(NA)
+    })
+    cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
+    
+
 
     cat("Test of difference in specificity for comorbidity vs not<p>")
-    output_text <- 
-      output_text <- tryCatch({
+    output_text <- tryCatch({
         capture.output(print(anova(res_comorbidity, L = c(0, 0, -1, 1))))
       }, error = function(e) {
         return(NA)
@@ -379,12 +380,11 @@ plot_diagnostic_meta <-
     cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
     
     cat("Test of difference in specificity for neurotypical vs clinical<p>")
-    output_text <- 
-      output_text <- tryCatch({
-        capture.output(print(anova(res_neuro_clinical, L = c(0, 0, -1, 1))))
-      }, error = function(e) {
-        return(NA)
-      })
+    output_text <- tryCatch({
+      capture.output(print(anova(res_neuro_clinical, L = c(0, 0, -1, 1))))
+    }, error = function(e) {
+      return(NA)
+    })
   }
 
 
