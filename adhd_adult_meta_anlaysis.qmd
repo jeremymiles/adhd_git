@@ -1,6 +1,6 @@
 ---
 title: "ADHD Adults Meta-Analysis"
-format: 
+format:
   html:
     embed-resources: true
 editor: visual
@@ -10,13 +10,10 @@ execute:
   message: false
 ---
 
-
 ```{r setup}
-
+# Ensure these files define 'd' and 'categories'
 source("setup.R")
 source("create_long_data.R")
-
-
 ```
 
 
@@ -44,9 +41,6 @@ d <- d %>%
 
 
 ```{r}
-##| fig-width: 14
-##| fig-height: 14
-
 inv_logit <- function(x) { exp(x) / (1 + exp(x)) }
 logit <- function(x) { log(x / (1 - x)) }
 
@@ -72,11 +66,11 @@ plot_diagnostic_meta <-
     cat(glue::glue("<h2>{diag_type_name}</h2><br>"))
     d[[instrument_col]] <- stringr::word(d[[instrument_col]])
     
-   list_dat <- CreateLongData(d = d, true_pos, true_neg, false_pos, false_neg)
-   
-   dat_sens_spec <- list_dat$dat_sens_spec 
-   dat_long <- list_dat$dat_long
-   
+    list_dat <- CreateLongData(d = d, true_pos, true_neg, false_pos, false_neg)
+    
+    dat_sens_spec <- list_dat$dat_sens_spec 
+    dat_long <- list_dat$dat_long
+    
     # Find studies where calculated value of sens and spec differs from their calculation
     dat_sens_spec_discrepant <- dat_sens_spec %>%
       dplyr::filter(
@@ -88,9 +82,9 @@ plot_diagnostic_meta <-
     # 2. Run Meta-Analysis Model
     res <- metafor::rma.mv(
       yi, vi, mods = ~ outcome - 1, 
-                           random = ~ outcome | study,
-                           struct = "UN", data = dat_long
-                           )
+      random = ~ outcome | study,
+      struct = "UN", data = dat_long
+    )
     output_text <- capture.output(print(res))
     cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
     
@@ -108,7 +102,7 @@ plot_diagnostic_meta <-
       distinct(study) %>%
       # Add the instrument label early so we can sort by it and Clinical
       dplyr::inner_join(
-       d %>% dplyr::select(study, Clinical, !!rlang::sym(instrument_col)) 
+        d %>% dplyr::select(study, Clinical, !!rlang::sym(instrument_col)) 
       ) %>% 
       dplyr::mutate(
         instrument_label = !!rlang::sym(instrument_col),
@@ -120,7 +114,7 @@ plot_diagnostic_meta <-
       # ...then we assign row_num so that the first item gets the HIGHEST row 
       # (putting it at the top of the plot)
       mutate(row_num = rev(row_number())) 
-
+    
     
     k_total <- nrow(all_studies)
     cex <- 0.6
@@ -196,10 +190,12 @@ plot_diagnostic_meta <-
       knitr::kable(dat_sens_spec_discrepant) %>% print()
     }
     
-    
-    
+
     ############### Neurotypical only
     cat("<h3>Neurotypical Only</h3><p>")
+    
+    cat("This section compares those studies which were labelled as Neurotypical 
+        with all other studies.")
     
     dat_long$neurotypical_mod <-
       dat_long$Neurotypical == "Neurotypical"
@@ -212,15 +208,15 @@ plot_diagnostic_meta <-
         random = ~ outcome | study,
         struct = "UN", data = dat_long
       )
-
-    
+      
+      
       output_text <- capture.output(print(res_neurotypical))
       cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
       
       results_tab <- as.data.frame(summary(res_neurotypical)$beta)
       results_tab$ci.lb <- res_neurotypical$ci.lb
       results_tab$ci.ub <- res_neurotypical$ci.ub
-        
+      
       # Apply the inverse logit: exp(x) / (1 + exp(x))
       results_transformed <- results_tab %>%
         mutate(
@@ -237,12 +233,12 @@ plot_diagnostic_meta <-
       output_text <- 
         capture.output(print(anova(res_neurotypical, L = c(-1, 1, 0, 0))))
       cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
- 
+      
       cat("Test of difference in specificity for neurotypical vs not<p>")
       output_text <- 
         capture.output(print(anova(res_neurotypical, L = c(0, 0, -1, 1))))
       cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
-     }
+    }
     rm(res_neurotypical)
     rm(dat_long)
     ########## End neurotypical only
@@ -259,12 +255,12 @@ plot_diagnostic_meta <-
         coNA = co.N.A == "co-N/A",
         has_comorbidity = (
           co.Anxiety == "co-Anxiety" |
-          co.Autism == "co-Autism" |
-          co.Depression == "co-Depression" |
-          co.OCD == "co-OCD" |
-          co.Other == "co-Other" |
-          co.SUD ==  "co-SUD")
-        ) %>%
+            co.Autism == "co-Autism" |
+            co.Depression == "co-Depression" |
+            co.OCD == "co-OCD" |
+            co.Other == "co-Other" |
+            co.SUD ==  "co-SUD")
+      ) %>%
       dplyr::filter(has_comorbidity | coNA) %>%
       dplyr::mutate(
         coNA = ifelse(is.na(coNA), FALSE, coNA),
@@ -277,24 +273,41 @@ plot_diagnostic_meta <-
       ) %>%
       dplyr::filter(!is.na(outcome))
     
-      res_comorbidity <- metafor::rma.mv(
-        yi, vi, 
-        mods = ~ has_comorbidity:outcome - 1,
-        random = ~ outcome | study,
-        struct = "UN", data = d_comorbids
-      )
+    res_comorbidity <- metafor::rma.mv(
+      yi, vi, 
+      mods = ~ has_comorbidity:outcome - 1,
+      random = ~ outcome | study,
+      struct = "UN", data = d_comorbids
+    )
+    
+    
+    
     output_text <- capture.output(print(res_comorbidity))
     cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
     cat("Test of difference in sensitivity for comorbidity vs not<p>")
     
-    output_text <- 
-      output_text <- tryCatch({
-        capture.output(print(anova(res_comorbidity, L = c(-1, 1, 0, 0))))
-      }, error = function(e) {
-        return(NA)
-      })
+    output_text <- tryCatch({
+      capture.output(print(anova(res_comorbidity, L = c(-1, 1, 0, 0))))
+    }, error = function(e) {
+      return(NA)
+    })
     cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
     
+    results_tab <- as.data.frame(summary(res_comorbidity)$beta)
+    results_tab$ci.lb <- res_comorbidity$ci.lb
+    results_tab$ci.ub <- res_comorbidity$ci.ub
+    
+    # Apply the inverse logit: exp(x) / (1 + exp(x))
+    results_transformed <- results_tab %>%
+      mutate(
+        Estimate_Prob = plogis(V1),
+        Lower_CI = plogis(ci.lb),
+        Upper_CI = plogis(ci.ub)
+      ) %>%
+      select(Estimate_Prob, Lower_CI, Upper_CI)
+    
+    print(knitr::kable(results_transformed, digits = 3))
+
     cat("Test of difference in specificity for comorbidity vs not<p>")
     output_text <- 
       output_text <- tryCatch({
@@ -306,13 +319,18 @@ plot_diagnostic_meta <-
     
     rm(dat_long)
     rm(d_comorbids)
+    rm(res_comorbidity)
     
     
     ############## Compare clinical with neurotypical
     cat("<h3>Neurotypical Only vs Clinical Only</h3><p>")
-   
+    
+    cat("This section compares those studies which were labelled Neurotypical 
+        with those students that were labelled Clinical. If the study was not
+        labelled with either, or was labelled with both, it is not included.")
+    
     list_dat <- CreateLongData(data = d, true_pos, true_neg, false_pos, false_neg)
-   
+    
     dat_sens_spec <- list_dat$dat_sens_spec 
     dat_long <- list_dat$dat_long
     
@@ -326,12 +344,29 @@ plot_diagnostic_meta <-
       dplyr::filter(!(neurotypical_mod & clinical_mod))
     
     res_neuro_clinical <- metafor::rma.mv(
-        yi, vi, 
-        mods = ~ neurotypical_mod:outcome - 1,
-        random = ~ outcome | study,
-        struct = "UN", data = dat_long
-      )
-        output_text <- capture.output(print(res_comorbidity))
+      yi, vi, 
+      mods = ~ neurotypical_mod:outcome - 1,
+      random = ~ outcome | study,
+      struct = "UN", data = dat_long
+    )
+    output_text <- capture.output(print(res_neuro_clinical))
+    
+    #results_tab <- as.data.frame(summary(res_neuro_clinical)$beta)
+    #results_tab$ci.lb <- res_neuro_clinical$ci.lb
+    #results_tab$ci.ub <- res_neuro_clinical$ci.ub
+    
+    # Apply the inverse logit: exp(x) / (1 + exp(x))
+    results_transformed <- results_tab %>%
+      mutate(
+        Estimate_Prob = plogis(V1),
+        Lower_CI = plogis(ci.lb),
+        Upper_CI = plogis(ci.ub)
+      ) %>%
+      select(Estimate_Prob, Lower_CI, Upper_CI)
+    
+    print(knitr::kable(results_transformed, digits = 3))
+
+    
     cat("```\n", paste(output_text, collapse = "\n"), "\n```\n", sep = "")
     cat("Test of difference in sensitivity for neurotypical vs clinical <p>")
     
@@ -356,11 +391,7 @@ plot_diagnostic_meta <-
 ```
 
 ```{r}
-#| results: asis
-#| ##| fig-width: 14
-##| fig-height: 14
-
-#| 
+##| results: asis
 # Define the categories you want to loop through
 
 for (category in categories) {
