@@ -148,7 +148,7 @@ plot_diagnostic_meta <-
     )
     addpoly(res$beta[1], sei = res$se[1],
             row = -1, transf = transf.ilogit, mlab = "", 
-            col = "red", cex = cex
+            col = "#D55E00", cex = cex
     )
     
     # 5. Plot Specificity
@@ -176,7 +176,7 @@ plot_diagnostic_meta <-
       sei = res$se[2], 
       row = -1, 
       transf = transf.ilogit, 
-      mlab = "", col = "red", cex = cex
+      mlab = "", col = "#D55E00", cex = cex
     )
     
     cat("<h3>Discrepant Studies</h3><br>")
