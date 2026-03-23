@@ -147,7 +147,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing sensitivity versus specificity.")
 
 
 d_ss_long <- d_ss_long %>%
@@ -169,7 +170,8 @@ ggplot2::ggplot(
   guides(colour = "none") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing sensitivity versus specificity faceted by name with count, with points colored by name and shaped by Neurotypical status.")
 ```
 
 ```{r}
@@ -187,7 +189,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing sensitivity versus specificity faceted by name with count, with points shaped by whether the sample is Neurotypical Only."
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -287,7 +290,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing sensitivity versus specificity, with points sized by size, colored by Frequent Tools, and shaped by whether the sample is Neurotypical Only."
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -370,7 +374,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing sensitivity versus specificity, with points sized by size, colored by Frequent Tools, and shaped by whether the sample is Neurotypical Only."
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -500,7 +505,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots of values across groups, faceted by type and measure.")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -511,7 +517,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Boxplots of values across groups, faceted by measure and type.")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -521,7 +527,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots of values across groups, colored by measure and faceted by type.")
 
 
 ```
