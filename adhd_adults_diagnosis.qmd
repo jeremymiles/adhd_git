@@ -147,7 +147,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing sensitivity vs specificity for different diagnosis methods.")
 
 
 d_ss_long <- d_ss_long %>%
@@ -169,7 +170,8 @@ ggplot2::ggplot(
   guides(colour = "none") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing sensitivity vs specificity for different diagnosis methods, faceted by test type, with color coding for test type and shape coding for neurotypical inclusion.")
 ```
 
 ```{r}
@@ -190,7 +192,8 @@ ggplot2::ggplot(
     shape = "Neurotypical only"
   ) +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing sensitivity vs specificity for different diagnosis methods, faceted by test type with study counts, indicating neurotypical only samples.")
 
 # separate charts
 for (name_1 in d_ss_long$name) {
@@ -209,7 +212,8 @@ for (name_1 in d_ss_long$name) {
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
-    ylim(c(0, 100))
+    ylim(c(0, 100)) +
+    labs(alt = paste("Scatter plot showing sensitivity vs specificity for", name_1, ", indicating neurotypical only samples."))
   print(plot)
 }
 
@@ -299,7 +303,8 @@ ggplot2::ggplot(
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Bubble chart showing sensitivity vs specificity for Self-Report Questionnaires, sized by sample size, shaped by neurotypical inclusion, and colored by frequent tools like ASRS, CAARS, BAARS, and WURS.")
 
 
 d_test_description_np <- d %>%
@@ -374,7 +379,8 @@ plot_data %>% ggplot2::ggplot(
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Bubble chart showing sensitivity vs specificity for Neuropsychological Tests, sized by sample size, shaped by neurotypical inclusion, and colored by frequent tools like AQT, C-CPT, MOXO, QbTest, and Go-NoGo.")
 
 
 
@@ -500,7 +506,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots comparing AUC and Accuracy values across different diagnostic test types and sample group compositions (Clinical, Neurotypical, Both).")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -511,7 +518,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Boxplots comparing AUC and Accuracy values across different diagnostic test types and sample group compositions, with measures on rows and test types on columns.")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -521,7 +528,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots comparing AUC and Accuracy values across sample group compositions, faceted by diagnostic test type, with color coding for AUC vs Accuracy.")
 
 
 ```
