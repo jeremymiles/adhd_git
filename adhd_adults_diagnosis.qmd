@@ -143,6 +143,7 @@ ggplot2::ggplot(
   aes(
     x = sensitivity, 
     y = specificity)) +
+  labs(alt = "Scatter plot of sensitivity versus specificity for diagnostic tools") +
   geom_point() +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
@@ -162,6 +163,7 @@ ggplot2::ggplot(
     x = sensitivity, 
     y = specificity,
     colour = name, shape = Neurotypical)) +
+  labs(alt = "Scatter plot of sensitivity versus specificity for diagnostic tools, faceted by tool type and colored by name") +
   geom_point(size = 2.5) +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
@@ -187,7 +189,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity versus specificity for diagnostic tools, faceted by tool type showing neurotypical only shapes"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -205,7 +208,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot of sensitivity versus specificity for", name_1)
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -287,7 +291,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity versus specificity for Self-Report Questionnaires, sized by study size and colored by frequent tools"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -370,7 +375,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity versus specificity for Neuropsychological Tests, sized by study size and colored by frequent tools"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -498,6 +504,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   ggplot2::ggplot(
     aes(x = Group, y = value)
   )  + 
+  labs(alt = "Boxplot of accuracy and AUC values across different diagnostic tools by group") +
   geom_boxplot() +
   facet_grid(type ~ measure)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
@@ -508,6 +515,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   ggplot2::ggplot(
     aes(x = Group, y = value)
   )  + 
+  labs(alt = "Boxplot of accuracy and AUC values faceted by measure and type") +
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
@@ -519,6 +527,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   ggplot2::ggplot(
     aes(x = Group, y = value, color = measure)
   )  + 
+  labs(alt = "Boxplot of accuracy and AUC values by group, colored by measure and faceted by tool type") +
   geom_boxplot() +
   facet_wrap(~ type) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
