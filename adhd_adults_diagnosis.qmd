@@ -146,6 +146,7 @@ ggplot2::ggplot(
   geom_point() +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
+  labs(alt = "Scatter plot showing sensitivity vs specificity for various ADHD diagnostic tools.") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 
@@ -167,6 +168,7 @@ ggplot2::ggplot(
   ylab("Specificity (%)") +
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
+  labs(alt = "Faceted scatter plot of sensitivity vs specificity across different diagnostic tools, grouped by neurotypical status.") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -187,7 +189,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Faceted scatter plot of sensitivity vs specificity across different diagnostic tools, specifically highlighting neurotypical only participants."
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -205,7 +208,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot of sensitivity vs specificity for", name_1, "highlighting neurotypical only participants.")
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -287,7 +291,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity vs specificity for self-report questionnaires, showing different tools and highlighting neurotypical only participants."
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -370,7 +375,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity vs specificity for neuropsychological tests, colored by frequent tools and highlighting neurotypical only participants."
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -500,6 +506,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
+  labs(alt = "Boxplots showing distribution of accuracy and AUC values across different participant groups, faceted by test type and measure.") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # Figure 7
@@ -511,7 +518,10 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(
+    y = NULL,
+    alt = "Boxplots of accuracy and AUC values across participant groups, organized with measures on rows and test types on columns."
+  )
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -521,6 +531,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
+  labs(alt = "Colored boxplots comparing accuracy and AUC values across participant groups, faceted by test type.") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
