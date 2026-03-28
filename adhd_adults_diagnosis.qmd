@@ -520,6 +520,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
     aes(x = Group, y = value, color = measure)
   )  + 
   geom_boxplot() +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
   facet_wrap(~ type) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
