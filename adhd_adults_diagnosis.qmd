@@ -146,6 +146,7 @@ ggplot2::ggplot(
   geom_point() +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
+  labs(alt = "Scatter plot showing the relationship between sensitivity and specificity across all studies.") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 
@@ -167,6 +168,7 @@ ggplot2::ggplot(
   ylab("Specificity (%)") +
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
+  labs(alt = "Scatter plots showing the relationship between sensitivity and specificity colored by name, faceted by name_with_count.") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -187,7 +189,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plots showing the relationship between sensitivity and specificity colored by name, faceted by name_with_count, and shaped by Neurotypical_Only."
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -205,7 +208,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot showing sensitivity vs specificity for", name_1, ", shaped by Neurotypical_Only.")
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -287,7 +291,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity vs specificity colored by Frequent Tools like CAARS, BAARS, and WURS."
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -370,7 +375,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity vs specificity colored by Frequent Tools like QbTest, and Go-NoGo."
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -500,6 +506,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
+  labs(alt = "Boxplots of values by Group, faceted by type and measure.") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # Figure 7
@@ -511,7 +518,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Boxplots of values by Group, faceted by measure and type.")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -521,6 +528,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
+  labs(alt = "Boxplots of values by Group colored by measure, faceted by type.") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
