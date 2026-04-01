@@ -147,7 +147,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing sensitivity vs specificity for all studies")
 
 
 d_ss_long <- d_ss_long %>%
@@ -169,7 +170,8 @@ ggplot2::ggplot(
   guides(colour = "none") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Faceted scatter plot of sensitivity vs specificity across different test names")
 ```
 
 ```{r}
@@ -187,13 +189,14 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Faceted scatter plot of sensitivity vs specificity showing neurotypical only comparisons across test names"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 
 # separate charts
-for (name_1 in d_ss_long$name) {
+for (name_1 in unique(d_ss_long$name)) {
   plot <- ggplot2::ggplot(
     d_ss_long %>% dplyr::filter(name_1 == name), 
     aes(
@@ -205,7 +208,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste0("Scatter plot of sensitivity vs specificity for ", name_1)
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -287,7 +291,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing sensitivity vs specificity colored by frequent tools"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -370,7 +375,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing sensitivity vs specificity for objective measures with labels"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -500,7 +506,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots of standardized values grouped by group, faceted by type and measure")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -511,7 +518,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Boxplots of standardized values grouped by group, faceted by measure and type")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -521,7 +528,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots of standardized values colored by measure, faceted by type")
 
 
 ```
