@@ -193,7 +193,7 @@ ggplot2::ggplot(
   ylim(c(0, 100))
 
 # separate charts
-for (name_1 in d_ss_long$name) {
+for (name_1 in unique(d_ss_long$name)) {
   plot <- ggplot2::ggplot(
     d_ss_long %>% dplyr::filter(name_1 == name), 
     aes(
@@ -205,7 +205,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot of sensitivity vs specificity for", name_1, "studies")
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
