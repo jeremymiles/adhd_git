@@ -18,8 +18,6 @@ source("setup.R")
 
 ```
 
-
-
 ```{r}
 #|fig-height: 12
 d_ss <- d %>% 
@@ -718,4 +716,3 @@ res <- lapply(all_kqs, CreateProgSummary)
 writexl::write_xlsx(dplyr::bind_rows(res), "adhd_adults_diagnosis_SoF.xlsx")
 
 ```
-
