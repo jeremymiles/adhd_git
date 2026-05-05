@@ -273,7 +273,11 @@ plot_diagnostic_meta <-
       yi, vi, 
       mods = ~ has_comorbidity:outcome - 1,
       random = ~ outcome | study,
-      struct = "UN", data = d_comorbids
+      struct = "UN", data = d_comorbids,
+      control = list(
+        optimizer = "optim",
+        iter.max = 10000      # Increase max iterations
+        )
     )
     
     
