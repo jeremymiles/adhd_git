@@ -1,3 +1,6 @@
 ## 2024-05-14 - Use accessible color palettes for data visualizations
 **Learning:** Hardcoded basic colors (like "red", "green", "yellow", "chocolate4") in data visualizations like ggplot2 can be extremely difficult to distinguish for users with color vision deficiencies, reducing accessibility.
 **Action:** Always replace basic hardcoded colors in plots with accessible, colorblind-friendly palettes such as Okabe-Ito (e.g., `#E69F00`, `#56B4E9`, `#009E73`, `#F0E442`, `#0072B2`, `#D55E00`, `#CC79A7`).
+## 2024-05-24 - Dynamic Alt Text and Optimized Loops in R/Quarto
+**Learning:** Static alt text on generated plots within a loop loses specific context and harms accessibility for screen reader users. Also iterating directly over dataframes to generate computationally expensive assets (like `ggplot2` rendering) without `unique()` leads to extremely high redundant processing and creates an absurd number of charts.
+**Action:** When generating plots dynamically in loops, always supply dynamic alt text (e.g. using `paste()`) via `labs(alt = ...)` so the specific context is captured. Ensure you use `unique()` on the iterator column in R to dramatically improve efficiency and avoid duplicate chart rendering.
