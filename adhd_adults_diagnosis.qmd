@@ -145,7 +145,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing sensitivity versus specificity across various diagnostic categories.")
 
 
 d_ss_long <- d_ss_long %>%
@@ -166,6 +167,7 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
   theme(legend.position = "bottom") +
+  labs(alt = "Faceted scatter plots showing sensitivity versus specificity, grouped by diagnostic tool with study counts.") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 ```
@@ -185,7 +187,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Faceted scatter plots of sensitivity versus specificity, highlighting studies with neurotypical only control groups."
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +206,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot of sensitivity versus specificity for", name_1, "highlighting neurotypical only studies.")
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -285,7 +289,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Bubble chart of sensitivity versus specificity for self-report tools, colored by frequent tools and sized by study size."
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +373,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Bubble chart of sensitivity versus specificity for neuropsychological tools, colored by frequent tools and sized by study size."
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -498,7 +504,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Faceted box plots showing accuracy and AUC values across different diagnostic tools and control groups.")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -509,7 +516,10 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(
+    y = NULL,
+    alt = "Faceted box plots of accuracy and AUC against control group type, with diagnostic tools as columns."
+  )
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +529,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Wrapped faceted box plots comparing accuracy and AUC measures across diagnostic tools.")
 
 
 ```
