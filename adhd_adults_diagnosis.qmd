@@ -185,7 +185,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Faceted scatter plot of sensitivity versus specificity by test type"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +204,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot of sensitivity versus specificity for", name_1, "studies")
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
