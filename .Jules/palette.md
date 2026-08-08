@@ -1,3 +1,3 @@
-## 2024-05-14 - Use accessible color palettes for data visualizations
-**Learning:** Hardcoded basic colors (like "red", "green", "yellow", "chocolate4") in data visualizations like ggplot2 can be extremely difficult to distinguish for users with color vision deficiencies, reducing accessibility.
-**Action:** Always replace basic hardcoded colors in plots with accessible, colorblind-friendly palettes such as Okabe-Ito (e.g., `#E69F00`, `#56B4E9`, `#009E73`, `#F0E442`, `#0072B2`, `#D55E00`, `#CC79A7`).
+## 2024-03-24 - Added alt text to Quarto ggplots
+**Learning:** When using Quarto/RMarkdown, `ggplot2` plots need alternative text added directly within the R code using `labs(alt = '...')` to ensure the generated HTML images are accessible to screen readers.
+**Action:** Always include `labs(alt = '...')` in `ggplot2::ggplot()` calls when authoring accessible Quarto documents.
