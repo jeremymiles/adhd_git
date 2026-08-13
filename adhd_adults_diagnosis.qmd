@@ -263,7 +263,7 @@ my_colors <- c(
   "CAARS" = "#0072B2",   # Replace with your preferred color
   "BAARS" = "#009E73",  # Replace with your preferred color
   "WURS"  = "#CC79A7",  # Replace with your preferred color
-  "Other" = "#000000"   # The specific requirement
+  "Other" = "#56B4E9"   # Accessible Okabe-Ito alternative to black
 )
 
 # 2. Plot
@@ -352,7 +352,7 @@ my_colors <- c(
   "MOXO"    = "#009E73",  # Replace with your preferred color
   "QbTest"  = "#CC79A7",
   "Go-NoGo" = "#E69F00",
-  "Other"   = "#000000"   # The specific requirement
+  "Other"   = "#56B4E9"   # Accessible Okabe-Ito alternative to black
 )
 
 plot_data %>% ggplot2::ggplot(
