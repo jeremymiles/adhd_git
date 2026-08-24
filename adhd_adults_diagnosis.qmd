@@ -144,6 +144,7 @@ ggplot2::ggplot(
   geom_point() +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
+  labs(alt = "Scatter plot showing Sensitivity vs Specificity for all diagnosis tests") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 
@@ -166,6 +167,7 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
   theme(legend.position = "bottom") +
+  labs(alt = "Scatter plots showing Sensitivity vs Specificity for all diagnosis tests faceted by test category") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 ```
@@ -185,7 +187,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plots showing Sensitivity vs Specificity for self report diagnosis tests faceted by test name"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +206,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot showing Sensitivity vs Specificity for", name_1, "self report diagnosis tests")
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -285,7 +289,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing Sensitivity vs Specificity for self report diagnosis tests with bubble size representing sample size and color indicating the test tool"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +373,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing Sensitivity vs Specificity for continuous performance diagnosis tests with bubble size representing sample size and color indicating the test tool"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -498,7 +504,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplot showing Sensitivity, Specificity, Positive Predictive Value, and Negative Predictive Value for diagnosis tests by comorbidity and clinical groups faceted by measure and type")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -509,7 +516,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Boxplot showing Sensitivity, Specificity, Positive Predictive Value, and Negative Predictive Value for diagnosis tests by comorbidity and clinical groups")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +526,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplot showing measures for diagnosis tests faceted by comorbidity and clinical groups with color indicating the measure")
 
 
 ```
