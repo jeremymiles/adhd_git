@@ -144,6 +144,7 @@ ggplot2::ggplot(
   geom_point() +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
+  labs(alt = "Scatter plot showing sensitivity on x axis and specificity on y axis") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 
@@ -166,6 +167,7 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
   theme(legend.position = "bottom") +
+  labs(alt = "Scatter plots showing sensitivity and specificity for various diagnostic tools, faceted by tool type") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 ```
@@ -185,7 +187,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing sensitivity on x axis and specificity on y axis by diagnostic tool"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +206,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot showing sensitivity on x axis and specificity on y axis for", name_1)
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -285,7 +289,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing sensitivity vs specificity where point size represents tool frequency"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +373,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing sensitivity vs specificity for continuous performance tests"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -497,8 +503,9 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
     aes(x = Group, y = value)
   )  + 
   geom_boxplot() +
-  facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  facet_grid(type ~ measure) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Box plot comparing continuous performance test values grouped by diagnostic tool and measure")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -507,9 +514,9 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
     aes(x = Group, y = value)
   )  + 
   geom_boxplot() +
-  facet_grid(measure ~ type)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  facet_grid(measure ~ type) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(y = NULL, alt = "Box plot of continuous performance tests faceted by measure and type")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +526,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Box plot of test values colored by measure and faceted by test type")
 
 
 ```
