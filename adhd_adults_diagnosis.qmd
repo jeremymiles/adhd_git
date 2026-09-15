@@ -145,7 +145,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing sensitivity vs specificity for various ADHD diagnostic tools")
 
 
 d_ss_long <- d_ss_long %>%
@@ -167,7 +168,8 @@ ggplot2::ggplot(
   guides(colour = "none") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Faceted scatter plots showing sensitivity vs specificity across different ADHD diagnostic tools")
 ```
 
 ```{r}
@@ -185,7 +187,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plots showing sensitivity vs specificity for different ADHD diagnostic tools, distinguishing neurotypical only studies"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +206,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot of sensitivity vs specificity for", name_1)
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -297,7 +301,8 @@ ggplot2::ggplot(
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot of sensitivity vs specificity for continuous performance tests with weighted sizes")
 
 
 d_test_description_np <- d %>%
@@ -372,7 +377,8 @@ plot_data %>% ggplot2::ggplot(
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot of sensitivity vs specificity for continuous performance tests with weighted sizes")
 
 
 
@@ -498,7 +504,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots comparing accuracy and other measures between clinical and neurotypical groups across different assessment types")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -509,7 +516,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Boxplots showing accuracy and related measures by group across assessment types")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +526,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots comparing multiple measures between groups for different assessment types")
 
 
 ```
