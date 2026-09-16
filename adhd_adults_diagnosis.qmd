@@ -145,7 +145,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing specificity on the y-axis and sensitivity on the x-axis")
 
 
 d_ss_long <- d_ss_long %>%
@@ -167,7 +168,8 @@ ggplot2::ggplot(
   guides(colour = "none") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Faceted scatter plot showing specificity on the y-axis and sensitivity on the x-axis, grouped by tool name")
 ```
 
 ```{r}
@@ -185,7 +187,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Faceted scatter plot of sensitivity vs specificity across multiple studies, with distinct shapes indicating whether the sample was neurotypical only"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +206,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot of sensitivity vs specificity for", name_1, "studies, shaped by neurotypical status")
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -285,7 +289,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Bubble plot showing sensitivity and specificity of self-report ADHD tools, with point size representing sample size and color indicating the specific tool"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +373,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity versus specificity for performance-based ADHD tests, colored by test type"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -498,7 +504,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Box plots comparing distribution of values across different groups, faceted by measurement and type")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -509,7 +516,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Box plots comparing distribution of values across groups, faceted with measurement as rows and type as columns")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +526,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Box plots showing value distributions by group, colored by measurement type and faceted by type category")
 
 
 ```
