@@ -145,7 +145,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing specificity on the y-axis and sensitivity on the x-axis. Both range from 0 to 100 percent.")
 
 
 d_ss_long <- d_ss_long %>%
