@@ -144,6 +144,7 @@ ggplot2::ggplot(
   geom_point() +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
+  labs(alt = "Scatter plot showing sensitivity and specificity of self-report questionnaires") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 
@@ -165,6 +166,7 @@ ggplot2::ggplot(
   ylab("Specificity (%)") +
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
+  labs(alt = "Faceted scatter plots of sensitivity versus specificity for multiple test categories") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -185,7 +187,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity versus specificity across test categories, showing control group composition"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +206,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = "Scatter plot of sensitivity versus specificity for a specific test category"
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -285,7 +289,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot comparing sensitivity and specificity of frequent ADHD diagnostic tools, with point size indicating sample size"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +373,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of diagnostic accuracy for continuous performance tests, comparing sensitivity and specificity"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -498,7 +504,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Box plots showing the distribution of accuracy measures across different types of diagnostic tests")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -509,7 +516,10 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(
+    y = NULL,
+    alt = "Box plots comparing accuracy measures (AUC, sensitivity, specificity) across various test categories"
+  )
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +529,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Grouped box plots showing the distribution of accuracy, sensitivity, and specificity metrics by test type")
 
 
 ```
