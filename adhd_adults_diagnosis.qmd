@@ -185,7 +185,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Faceted scatterplot showing sensitivity versus specificity across various ADHD diagnostic tools, categorized by neurotypical only samples"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
