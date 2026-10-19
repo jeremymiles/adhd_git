@@ -144,6 +144,7 @@ ggplot2::ggplot(
   geom_point() +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
+  labs(alt = "Scatter plot showing sensitivity vs specificity for ADHD diagnosis") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 
@@ -163,6 +164,7 @@ ggplot2::ggplot(
   geom_point(size = 2.5) +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
+  labs(alt = "Facet wrapped scatter plot of sensitivity vs specificity by study type") +
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
   theme(legend.position = "bottom") +
@@ -185,7 +187,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Facet wrapped scatter plot highlighting neurotypical vs clinical populations"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +206,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = paste("Scatter plot of sensitivity vs specificity for", name_1)
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -285,7 +289,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Bubble plot of sensitivity vs specificity labeled with test descriptions"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +373,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Bubble plot of sensitivity vs specificity for different frequent tools"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -498,6 +504,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
+  labs(alt = "Boxplots of diagnostic accuracy metrics across different test types") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # Figure 7
@@ -509,7 +516,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Boxplots of accuracy metrics grouped by measure and type")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,6 +526,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
+  labs(alt = "Faceted boxplots of diagnostic measures by test type") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
