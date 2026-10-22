@@ -203,7 +203,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = "Scatter plot showing specificity vs sensitivity for individual diagnostic tools in separate charts, indicating whether the control group was exclusively neurotypical."
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -285,7 +286,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Bubble chart plotting specificity vs sensitivity grouped by frequent tools, with point size reflecting sample size and shape showing exclusively neurotypical control groups."
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +370,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot showing specificity vs sensitivity for frequent tools with test descriptions as labels, point size representing sample size, and shape indicating exclusively neurotypical control groups."
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
@@ -498,7 +501,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots comparing accuracy and balanced accuracy across different diagnostic groups and study types.")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -509,7 +513,10 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(
+    y = NULL,
+    alt = "Boxplots comparing accuracy measures across different diagnostic groups and study types, faceted by measure and type."
+  )
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +526,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Colored boxplots comparing different accuracy measures across diagnostic groups, faceted by study type.")
 
 
 ```
