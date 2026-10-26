@@ -145,7 +145,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot of sensitivity versus specificity for ADHD diagnostic tools")
 
 
 d_ss_long <- d_ss_long %>%
@@ -285,7 +286,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot of sensitivity vs specificity for self-report tools, sized by study N and colored by test type"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -498,7 +500,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots of specificity and sensitivity across control groups, separated by test type")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -509,7 +512,10 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(
+    y = NULL,
+    alt = "Boxplots of specificity and sensitivity by test type and control group"
+  )
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +525,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplots comparing sensitivity and specificity measures across different test types")
 
 
 ```
