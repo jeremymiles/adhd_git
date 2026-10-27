@@ -145,7 +145,8 @@ ggplot2::ggplot(
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing specificity vs sensitivity.")
 
 
 d_ss_long <- d_ss_long %>%
@@ -167,7 +168,8 @@ ggplot2::ggplot(
   guides(colour = "none") +
   theme(legend.position = "bottom") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing specificity vs sensitivity.")
 ```
 
 ```{r}
@@ -188,7 +190,8 @@ ggplot2::ggplot(
     shape = "Neurotypical only"
   ) +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing specificity vs sensitivity.")
 
 # separate charts
 for (name_1 in d_ss_long$name) {
@@ -207,7 +210,8 @@ for (name_1 in d_ss_long$name) {
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
-    ylim(c(0, 100))
+    ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing specificity vs sensitivity.")
   print(plot)
 }
 
@@ -297,7 +301,8 @@ ggplot2::ggplot(
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing specificity vs sensitivity.")
 
 
 d_test_description_np <- d %>%
@@ -372,7 +377,8 @@ plot_data %>% ggplot2::ggplot(
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
-  ylim(c(0, 100))
+  ylim(c(0, 100)) +
+  labs(alt = "Scatter plot showing specificity vs sensitivity.")
 
 
 
@@ -498,7 +504,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_grid(type ~ measure)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplot showing accuracy measures by tool type and group.")
 
 # Figure 7
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -509,7 +516,7 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   geom_boxplot() +
   facet_grid(measure ~ type)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  labs(y = NULL)
+  labs(y = NULL, alt = "Boxplot showing accuracy measures grouped by tool type and measure.")
 
 
 d_long_both %>% dplyr::filter(!is.na(value)) %>%
@@ -519,7 +526,8 @@ d_long_both %>% dplyr::filter(!is.na(value)) %>%
   )  + 
   geom_boxplot() +
   facet_wrap(~ type) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(alt = "Boxplot showing accuracy measures with measure types differentiated by color.")
 
 
 ```
