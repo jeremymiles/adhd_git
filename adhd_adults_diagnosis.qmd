@@ -144,6 +144,7 @@ ggplot2::ggplot(
   geom_point() +
   xlab("Sensitivity (%)") + 
   ylab("Specificity (%)") +
+  labs(alt = "Scatter plot showing sensitivity versus specificity for ADHD diagnostic tools") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 
@@ -166,6 +167,7 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count) +
   guides(colour = "none") +
   theme(legend.position = "bottom") +
+  labs(alt = "Faceted scatter plot of sensitivity vs specificity across different types of ADHD assessments") +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
 ```
@@ -185,7 +187,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Data visualization of ADHD diagnosis"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -285,7 +288,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Data visualization of ADHD diagnosis"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +372,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Data visualization of ADHD diagnosis"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
