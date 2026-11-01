@@ -185,7 +185,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot comparing sensitivity and specificity by tool type"
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -285,7 +286,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot comparing sensitivity and specificity by tool type"
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
@@ -368,7 +370,8 @@ plot_data %>% ggplot2::ggplot(
   ylab("Specificity (%)") +
   geom_text_repel(aes(label = test_description), max.overlaps = 10, size = 3) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Scatter plot comparing sensitivity and specificity by tool type"
   ) + 
   theme(legend.position = "right") +
   xlim(c(0, 100)) + 
