@@ -185,7 +185,8 @@ ggplot2::ggplot(
   facet_wrap(~ name_with_count, nrow = 2) +
   guides(colour = "none") +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Faceted scatter plots of sensitivity vs specificity across various diagnostic tools, shaped by neurotypical inclusion."
   ) +
   xlim(c(0, 100)) + 
   ylim(c(0, 100))
@@ -203,7 +204,8 @@ for (name_1 in d_ss_long$name) {
     ylab("Specificity") +
     guides(colour = "none") +
     labs(
-      shape = "Neurotypical only"
+      shape = "Neurotypical only",
+      alt = "Scatter plot of sensitivity vs specificity for the specific diagnostic tool, shaped by neurotypical inclusion."
     ) +
     ggtitle(name_1) +
     xlim(c(0, 100)) + 
@@ -285,7 +287,8 @@ ggplot2::ggplot(
   ggrepel::geom_text_repel(
     aes(label = test_description), max.overlaps = 10, size = 5) +
   labs(
-    shape = "Neurotypical only"
+    shape = "Neurotypical only",
+    alt = "Bubble chart displaying sensitivity vs specificity for frequent diagnostic tools, with dot size indicating sample size."
   ) +
   scale_size_continuous(
     name = "Size", # This sets the legend title
